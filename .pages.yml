@@ -32,10 +32,12 @@ content:
               label: "Film & TV / 影视配乐"
             - name: game
               label: "Games / 游戏音乐"
-            - name: concert
-              label: "Concert / 音乐会作品"
+            - name: fixedmedia
+              label: "Fixed Media / 固定媒体"
             - name: electronic
               label: "Electronic / 电子与计算机音乐"
+            - name: popsongs
+              label: "Pop Songs / 流行歌曲"
             - name: instrument
               label: "Instruments / 乐器与交互"
       - name: year
@@ -52,7 +54,7 @@ content:
             - name: video
               label: "Video file / 上传视频"
             - name: embed
-              label: "YouTube / Vimeo / Bilibili link / 视频链接"
+              label: "Link: YouTube, Bilibili, Vimeo, NetEase, Spotify, Apple Music, SoundCloud / 链接播放"
             - name: none
               label: "No media / 无播放"
       - name: audio
@@ -67,9 +69,9 @@ content:
         options:
           categories: [video]
       - name: embed_url
-        label: "Video link / 视频链接"
+        label: "Video or music link / 视频或音乐链接"
         type: string
-        description: "Paste a normal YouTube, Vimeo or Bilibili page link. 直接粘贴视频网页地址即可。"
+        description: "Paste the normal page link (YouTube, Bilibili, Vimeo, NetEase Cloud Music, Spotify, Apple Music, SoundCloud). Also used as a backup if an uploaded file fails. 直接粘贴网页地址；上传的文件播放失败时也会自动改用这个链接。"
       - name: cover
         label: "Cover image / 封面图 (optional)"
         type: image
@@ -118,7 +120,7 @@ content:
       - name: photo
         label: "Photo / 照片"
         type: image
-        description: "A portrait, ideally vertical (4:5). 竖版照片最佳（4:5），鼠标移上去会显示原色。"
+        description: "A portrait, ideally vertical (4:5). 竖版照片效果最好（4:5）。"
       - name: tagline_en
         label: "Tagline (English)"
         type: text
@@ -126,11 +128,11 @@ content:
         label: "一句话介绍（中文）"
         type: text
       - name: roles_en
-        label: "Practice list (English)"
+        label: "Main research areas (English)"
         type: string
         list: true
       - name: roles_zh
-        label: "方向列表（中文）"
+        label: "主要研究方向（中文）"
         type: string
         list: true
       - name: intro_en

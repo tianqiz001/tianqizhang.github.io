@@ -26,7 +26,9 @@
       'foot.top': 'Back to top ↑', 'localTime': 'Local time',
       'type.audio': 'Listen', 'type.video': 'Watch', 'type.embed': 'Watch', 'type.none': 'Open',
       'player.play': 'Play', 'player.pause': 'Pause', 'player.close': 'Close player',
-      'more': 'More ↗'
+      'more': 'More ↗',
+      'media.error': 'This file could not be played. It may be missing or still uploading.',
+      'openOn': 'Open on'
     },
     zh: {
       'nav.work': '作品', 'nav.about': '关于', 'nav.contact': '联系',
@@ -43,7 +45,9 @@
       'foot.top': '回到顶部 ↑', 'localTime': '当地时间',
       'type.audio': '试听', 'type.video': '观看', 'type.embed': '观看', 'type.none': '打开',
       'player.play': '播放', 'player.pause': '暂停', 'player.close': '关闭播放器',
-      'more': '更多 ↗'
+      'more': '更多 ↗',
+      'media.error': '这个文件无法播放，可能是文件缺失或还没有上传成功。',
+      'openOn': '在新窗口打开：'
     }
   };
 
@@ -51,14 +55,16 @@
   const CATS = {
     film:       { en: 'Film & TV',    zh: '影视配乐' },
     game:       { en: 'Games',        zh: '游戏音乐' },
-    concert:    { en: 'Concert',      zh: '音乐会作品' },
+    fixedmedia: { en: 'Fixed Media',  zh: '固定媒体' },
     electronic: { en: 'Electronic',   zh: '电子 / 计算机音乐' },
+    popsongs:   { en: 'Pop Songs',    zh: '流行歌曲' },
     instrument: { en: 'Instruments',  zh: '乐器与交互' }
   };
   const COVER_PALETTES = {
     film:       { bg: '#052628', line: 'rgba(228,238,235,.78)', hi: '#41e2c8', text: 'rgba(159,196,191,.8)' },
     game:       { bg: '#062f31', line: 'rgba(159,196,191,.85)', hi: '#41e2c8', text: 'rgba(159,196,191,.8)' },
-    concert:    { bg: '#0b3a3c', line: 'rgba(242,247,245,.82)', hi: '#ffffff', text: 'rgba(228,238,235,.7)' },
+    fixedmedia: { bg: '#0b3a3c', line: 'rgba(242,247,245,.82)', hi: '#ffffff', text: 'rgba(228,238,235,.7)' },
+    popsongs:   { bg: '#0e7470', line: 'rgba(242,247,245,.8)',  hi: '#41e2c8', text: 'rgba(228,238,235,.8)' },
     electronic: { bg: '#041e20', line: 'rgba(65,226,200,.85)',  hi: '#e4eeeb', text: 'rgba(65,226,200,.75)' },
     instrument: { bg: '#e4eeeb', line: 'rgba(10,37,38,.8)',     hi: '#0e7470', text: 'rgba(14,116,112,.85)' }
   };
@@ -110,7 +116,20 @@
       return { kind: 'vimeo', id: m[1], src: `https://player.vimeo.com/video/${m[1]}?autoplay=1&title=0&byline=0`, host: 'vimeo.com' };
     }
     if ((m = url.match(/bilibili\.com\/video\/(BV[\w]+)/i))) {
-      return { kind: 'bilibili', id: m[1], src: `https://player.bilibili.com/player.html?bvid=${m[1]}&autoplay=1&high_quality=1`, host: 'bilibili.com' };
+      return { kind: 'bilibili', id: m[1], src: `https://player.bilibili.com/player.html?bvid=${m[1]}&autoplay=1&high_quality=1&danmaku=0`, host: 'bilibili.com' };
+    }
+    // music players
+    if ((m = url.match(/music\.163\.com\/.*?song(?:\?id=|\/)(\d+)/))) {
+      return { kind: 'netease', id: m[1], audio: true, height: 90, src: `https://music.163.com/outchain/player?type=2&id=${m[1]}&auto=1&height=66`, host: 'music.163.com' };
+    }
+    if ((m = url.match(/open\.spotify\.com\/(?:intl-[\w-]+\/)?(track|album|playlist|episode)\/(\w+)/))) {
+      return { kind: 'spotify', id: m[2], audio: true, height: m[1] === 'track' ? 152 : 352, src: `https://open.spotify.com/embed/${m[1]}/${m[2]}`, host: 'spotify.com' };
+    }
+    if ((m = url.match(/music\.apple\.com\/(.+)/))) {
+      return { kind: 'apple', id: '', audio: true, height: /[?&]i=/.test(url) ? 175 : 450, src: `https://embed.music.apple.com/${m[1]}`, host: 'music.apple.com' };
+    }
+    if (/soundcloud\.com\//.test(url)) {
+      return { kind: 'soundcloud', id: '', audio: true, height: 166, src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true`, host: 'soundcloud.com' };
     }
     return { kind: 'other', src: url, host: (() => { try { return new URL(url).hostname; } catch (e) { return 'embed'; } })() };
   }
@@ -449,6 +468,32 @@
   /* ───────── works ───────── */
   const visibleWorks = () => works.filter((w) => !w.hidden);
 
+  /* Rows of up to 2 large ("featured") windows followed by up to 3 small ones.
+     When one kind runs out, the row is topped up with the other kind.
+     Width units: large = 3, small = 2, a full row = 12. */
+  function layoutRows(list) {
+    const big = list.filter((w) => w.featured), small = list.filter((w) => !w.featured);
+    const rows = [];
+    while (big.length || small.length) {
+      const row = [];
+      for (let i = 0; i < 2 && big.length; i++) row.push(big.shift());
+      for (let i = 0; i < 3 && small.length; i++) row.push(small.shift());
+      while (row.length < 5 && (big.length || small.length)) {
+        const units = row.reduce((n, w) => n + (w.featured ? 3 : 2), 0);
+        if (big.length && units + 3 <= 13) row.splice(row.filter((w) => w.featured).length, 0, big.shift());
+        else if (small.length && units + 2 <= 13) row.push(small.shift());
+        else break;
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+  let figMap = new Map();
+  function updateFigMap() {
+    figMap = new Map();
+    layoutRows(visibleWorks()).flat().forEach((w, i) => figMap.set(w._id, pad(i + 1)));
+  }
+
   function renderFilters() {
     const list = visibleWorks();
     const present = Object.keys(CATS).filter((k) => list.some((w) => w.category === k));
@@ -459,13 +504,14 @@
       present.map((k) => btn(k, CATS[k][lang], list.filter((w) => w.category === k).length)).join('');
   }
 
-  function cardHTML(w, idx) {
-    const fig = pad(idx + 1);
+  function cardHTML(w, idx, units, rowUnits) {
+    const fig = figMap.get(w._id) || pad(idx + 1);
     const kind = kindOf(w);
     const title = f(w, 'title') || 'Untitled';
     const role = f(w, 'role');
     const desc = f(w, 'description');
     const emb = kind === 'embed' ? parseEmbed(w.embed_url) : null;
+    const typeKey = kind === 'embed' && emb.audio ? 'audio' : kind;
     const file = kind === 'audio' ? basename(w.audio)
       : kind === 'video' ? basename(w.video)
       : kind === 'embed' ? `${emb.host}/${emb.id || ''}`
@@ -474,23 +520,23 @@
     let cover;
     if (w.cover) cover = `<img class="win-cover" src="${esc(mediaUrl(w.cover))}" alt="" loading="lazy">`;
     else if (emb && emb.thumb) cover = `<img class="win-cover" src="${esc(emb.thumb)}" alt="" loading="lazy">`;
-    else cover = `<canvas class="win-cover" data-gen="${idx}" width="${w.featured ? 1280 : 800}" height="${w.featured ? 720 : 600}"></canvas>`;
-    const icon = kind === 'audio' || kind === 'none'
+    else cover = `<canvas class="win-cover" data-gen="${w._id}" width="${w.featured ? 1200 : 800}" height="600"></canvas>`;
+    const icon = typeKey === 'audio' || kind === 'none'
       ? '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>'
       : '<svg viewBox="0 0 24 24"><path d="M3 6h13v12H3zM17 10l4-2.5v9L17 14z"/></svg>';
     const hasAction = kind !== 'none' || w.link;
     const viewTag = hasAction ? 'button type="button"' : 'div';
     const viewClose = hasAction ? 'button' : 'div';
     return `
-      <article class="win${w.featured ? ' featured' : ''}${playingId === w._id ? ' playing' : ''}${playingId === w._id && audio.paused ? ' paused' : ''}" data-id="${w._id}" style="--i:${idx}">
+      <article class="win${w.featured ? ' featured' : ''}${playingId === w._id ? ' playing' : ''}${playingId === w._id && audio.paused ? ' paused' : ''}" data-id="${w._id}" style="--i:${idx};--u:${units};--U:${rowUnits}">
         <div class="win-bar">
           <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="win-fig">FIG. ${fig}</span>
           <span class="win-file">${esc(file)}</span>
         </div>
-        <${viewTag} class="win-view" ${hasAction ? `aria-label="${esc(t('type.' + kind))}: ${esc(title)}"` : ''}>
+        <${viewTag} class="win-view" ${hasAction ? `aria-label="${esc(t('type.' + typeKey))}: ${esc(title)}"` : ''}>
           ${cover}
-          ${hasAction ? `<span class="win-play">${icon}<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${esc(t('type.' + kind))}</span>` : ''}
+          ${hasAction ? `<span class="win-play">${icon}<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${esc(t('type.' + typeKey))}</span>` : ''}
         </${viewClose}>
         <div class="win-cap">
           <h3>${esc(title)}</h3>
@@ -502,14 +548,20 @@
   }
 
   function renderWorks() {
+    updateFigMap();
     const all = visibleWorks();
     const shown = all.filter((w) => filter === 'all' || w.category === filter);
     const box = $('#windows');
     if (!shown.length) { box.innerHTML = `<p class="empty">${esc(t('work.empty'))}</p>`; return; }
-    box.innerHTML = shown.map((w) => cardHTML(w, all.indexOf(w))).join('');
+    let n = 0;
+    box.innerHTML = layoutRows(shown).map((row) => {
+      const units = row.reduce((s, w) => s + (w.featured ? 3 : 2), 0);
+      const U = Math.max(12, units);
+      return `<div class="win-row">${row.map((w) => cardHTML(w, n++, w.featured ? 3 : 2, U)).join('')}</div>`;
+    }).join('');
     $$('canvas[data-gen]', box).forEach((cv) => {
-      const idx = +cv.dataset.gen;
-      drawCover(cv, all[idx], pad(idx + 1));
+      const w = works.find((x) => x._id === cv.dataset.gen);
+      if (w) drawCover(cv, w, figMap.get(w._id));
     });
   }
 
@@ -527,7 +579,7 @@
     if (w) openWork(w);
   });
 
-  function figOf(w) { return `FIG. ${pad(visibleWorks().indexOf(w) + 1)}`; }
+  function figOf(w) { return `FIG. ${figMap.get(w._id) || '--'}`; }
 
   function openWork(w) {
     const kind = kindOf(w);
@@ -571,6 +623,18 @@
   audio.addEventListener('play', markCards);
   audio.addEventListener('pause', markCards);
   audio.addEventListener('ended', markCards);
+  audio.addEventListener('error', () => {
+    const w = works.find((x) => x._id === playingId);
+    if (!w || !audio.getAttribute('src')) return;
+    if (w.embed_url) {                       // file broken but a link exists: play the link instead
+      audio.pause(); audio.removeAttribute('src'); audio.load();
+      playingId = null; player.hidden = true; markCards();
+      openModal(w, 'embed');
+    } else {
+      $('#pTitle').textContent = t('media.error');
+      markCards();
+    }
+  });
   audio.addEventListener('timeupdate', () => {
     const d = audio.duration || 0;
     const p = d ? audio.currentTime / d : 0;
@@ -592,13 +656,26 @@
     if (!audio.paused) audio.pause();
     modalWork = w;
     const body = $('#modalBody');
+    const link = $('#modalLink');
+    body.classList.remove('is-audio');
+    body.style.height = '';
+    link.hidden = true;
     if (kind === 'video') {
       body.innerHTML = `<video controls autoplay playsinline src="${esc(mediaUrl(w.video))}"${w.cover ? ` poster="${esc(mediaUrl(w.cover))}"` : ''}></video>`;
       $('#modalFile').textContent = basename(w.video);
+      body.querySelector('video').addEventListener('error', () => {
+        if (modalWork !== w) return;
+        if (w.embed_url) openModal(w, 'embed');      // uploaded file broken: fall back to the link
+        else body.innerHTML = `<p class="modal-error">${esc(t('media.error'))}</p>`;
+      });
     } else {
       const emb = parseEmbed(w.embed_url);
-      body.innerHTML = `<iframe src="${esc(emb.src)}" title="${esc(f(w, 'title'))}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+      if (emb.audio) { body.classList.add('is-audio'); body.style.height = `${emb.height}px`; }
+      body.innerHTML = `<iframe src="${esc(emb.src)}" title="${esc(f(w, 'title'))}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
       $('#modalFile').textContent = emb.host;
+      link.href = w.embed_url;
+      link.textContent = `${t('openOn')} ${emb.host} ↗`;
+      link.hidden = false;
     }
     fillModalText();
     modal.hidden = false;

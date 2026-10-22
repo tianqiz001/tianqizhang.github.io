@@ -58,14 +58,16 @@
 <main>
   <section class="work" id="work" aria-labelledby="workHeading">
     <div class="wrap work-grid">
-      <aside class="work-side">
-        <div class="side-sticky">
+      <div class="work-head">
+        <div class="work-head-text">
           <p class="label">INDEX · <span id="workHeading" data-i18n="work.label">Selected work</span></p>
           <p class="intro" data-site="intro"></p>
+        </div>
+        <div class="work-head-tools">
           <div class="filters" id="filters" role="group" aria-label="Filter work"></div>
           <p class="side-note label" data-i18n="work.note">Click a window to listen or watch.</p>
         </div>
-      </aside>
+      </div>
       <div class="windows" id="windows"></div>
     </div>
   </section>
@@ -143,6 +145,7 @@
       <h3 id="modalTitle"></h3>
       <p class="label" id="modalRole"></p>
       <p id="modalDesc"></p>
+      <a class="win-link" id="modalLink" href="#" target="_blank" rel="noopener" hidden></a>
     </div>
   </div>
 </div>

@@ -187,23 +187,23 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
 }
 .work-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 2.4fr;
-  gap: clamp(28px, 4vw, 72px);
-  align-items: start;
+  gap: clamp(24px, 3vw, 44px);
 }
-.side-sticky {
-  position: sticky; top: 28px;
-  display: grid; gap: 22px;
+.work-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 20px 48px; flex-wrap: wrap;
 }
-.work-side .label { color: var(--mute); }
+.work-head-text { display: grid; gap: 14px; min-width: 0; flex: 1 1 420px; }
+.work-head-text .label { color: var(--mute); margin: 0; }
 .intro {
   margin: 0;
-  font-size: clamp(19px, 1.6vw, 23px);
+  font-size: clamp(18px, 1.5vw, 22px);
   line-height: 1.4;
   text-wrap: pretty;
-  max-width: 34ch;
+  max-width: 46ch;
 }
-.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.work-head-tools { display: grid; gap: 10px; justify-items: end; flex: 0 1 auto; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 .filter {
   border: 1px solid var(--rule); background: transparent;
   border-radius: 999px; padding: 6px 12px;
@@ -214,14 +214,20 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
 .filter sup { font-size: 9px; margin-left: 2px; }
 .filter:hover { border-color: var(--teal); color: var(--teal); }
 .filter[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: var(--sheet); }
-.side-note { margin: 0; }
+.side-note { margin: 0; color: var(--mute); }
 
 .windows {
+  --gap: clamp(14px, 1.4vw, 22px);
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
-  gap: clamp(16px, 2vw, 28px);
+  gap: var(--gap);
   min-width: 0;
 }
+/* One row = up to 2 large windows (3 units) + 3 small windows (2 units); 12 units fill the width.
+   Large windows are 2:1 and small ones 4:3, so their pictures line up at the same height. */
+.win-row { display: flex; gap: var(--gap); align-items: stretch; min-width: 0; }
+.win-row > .win { flex: 0 0 calc((100% - 4 * var(--gap)) * var(--u) / var(--U)); }
+.win-row > .win .win-view { aspect-ratio: 4 / 3; }
+.win-row > .win.featured .win-view { aspect-ratio: 2 / 1; }
 .win {
   background: var(--sheet);
   border: 1px solid var(--rule);
@@ -236,10 +242,15 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
 }
 @keyframes rise { from { transform: translateY(14px); opacity: 0; } }
 .win:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -22px rgba(5,38,40,.55); border-color: rgba(14,116,112,.45); }
-@media (min-width: 1100px) {
-  .windows { grid-auto-flow: dense; }
-  .win.featured { grid-column: span 2; grid-row: span 2; }
-  .win.featured .win-view { flex: 1; aspect-ratio: auto; min-height: 240px; }
+@media (max-width: 1099px) {
+  /* narrower screens: drop the rows and let windows flow in a simple grid */
+  .windows { grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+  .win-row { display: contents; }
+  .win-row > .win .win-view, .win-row > .win.featured .win-view { aspect-ratio: 4 / 3; }
+}
+@media (min-width: 700px) and (max-width: 1099px) {
+  .win.featured { grid-column: span 2; }
+  .win-row > .win.featured .win-view { aspect-ratio: 2 / 1; }
 }
 
 .win-bar {
@@ -287,20 +298,21 @@ canvas.win-cover { display: block; }
 .win.playing .win-play svg { display: none; }
 .win.playing.paused .eq i { animation-play-state: paused; }
 
-.win-cap { padding: 14px 14px 16px; display: grid; gap: 4px; }
+.win-cap { padding: 12px 12px 14px; display: grid; gap: 4px; align-content: start; }
 .win-cap h3 {
   margin: 0;
   font-family: var(--display);
   font-variation-settings: "wdth" 100, "wght" 650;
-  font-size: 19px; line-height: 1.2; letter-spacing: -.005em;
+  font-size: 18px; line-height: 1.2; letter-spacing: -.005em;
   text-wrap: balance;
 }
 html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font-weight: 700; }
 .win-role { margin: 0; color: var(--teal); }
 .win-desc {
   margin: 4px 0 0; color: var(--mute); font-size: 14px; line-height: 1.5;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
+.win.featured .win-desc { -webkit-line-clamp: 3; }
 .win-link { margin-top: 6px; font-family: var(--mono); font-size: 11px; color: var(--teal); text-decoration: none; text-transform: uppercase; letter-spacing: .05em; }
 .win-link:hover { text-decoration: underline; }
 .empty { grid-column: 1 / -1; color: var(--mute); padding: 40px 0; }
@@ -335,20 +347,9 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
 }
 .portrait-frame img {
   width: 100%; height: 100%; object-fit: cover;
-  filter: grayscale(1) contrast(1.05);
-  transition: filter .6s ease, transform .8s cubic-bezier(.2,.7,.2,1);
+  transition: transform .8s cubic-bezier(.2,.7,.2,1);
 }
-.portrait-frame.has-photo::after { /* blue-green duotone that clears on hover */
-  content: "";
-  position: absolute; inset: 0;
-  background: var(--teal);
-  mix-blend-mode: color;
-  opacity: .85;
-  transition: opacity .6s ease;
-  pointer-events: none;
-}
-.portrait:hover .portrait-frame img { filter: none; transform: scale(1.02); }
-.portrait:hover .portrait-frame.has-photo::after { opacity: 0; }
+.portrait:hover .portrait-frame img { transform: scale(1.02); }
 .portrait-empty {
   position: absolute; inset: 14px;
   border: 1px dashed rgba(65, 226, 200, .45);
@@ -487,7 +488,10 @@ input[type="range"]::-moz-range-thumb { width: 10px; height: 10px; border-radius
 .modal-cap h3 { margin: 0; font-family: var(--display); font-variation-settings: "wdth" 100, "wght" 650; font-size: 22px; }
 html[lang^="zh"] .modal-cap h3 { font-family: "Noto Sans SC", var(--display); font-weight: 700; }
 .modal-cap .label { color: var(--teal); margin: 0; }
-.modal-cap p:last-child { margin: 6px 0 0; color: var(--mute); max-width: 70ch; }
+.modal-cap #modalDesc { margin: 6px 0 0; color: var(--mute); max-width: 70ch; white-space: pre-line; }
+.modal-cap .win-link { justify-self: start; margin-top: 8px; }
+.modal-body.is-audio { aspect-ratio: auto; background: var(--sheet); }
+.modal-error { margin: 0; height: 100%; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--mist); background: var(--abyss); }
 
 /* ───────── RESPONSIVE ───────── */
 @media (max-width: 1100px) {
@@ -497,7 +501,8 @@ html[lang^="zh"] .modal-cap h3 { font-family: "Noto Sans SC", var(--display); fo
 @media (max-width: 860px) {
   .work-grid, .about-grid { grid-template-columns: 1fr; }
   .cv { grid-column: auto; }
-  .side-sticky { position: static; }
+  .work-head-tools { justify-items: start; }
+  .filters { justify-content: flex-start; }
   .roles { text-align: left; }
   .nav { display: none; }
   .player-inner { grid-template-columns: auto minmax(0, 1fr) auto; }
