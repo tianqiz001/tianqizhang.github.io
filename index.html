@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tianqi Zhang / Mercu · 张天琪</title>
+<meta name="description" content="Tianqi Zhang (Mercu, 张天琪) — composer working in computer music, screen scoring and instrument design.">
+<meta name="theme-color" content="#052628">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Sans:wght@400..600&family=Martian+Mono:wdth,wght@75..112.5,300..500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="hero" id="top">
+  <canvas class="hero-scope" id="heroScope" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <nav class="topbar" aria-label="Main">
+      <a class="mark" href="#top">M/TZ</a>
+      <ul class="nav">
+        <li><a href="#work" data-i18n="nav.work">Work</a></li>
+        <li><a href="#about" data-i18n="nav.about">About</a></li>
+        <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
+      </ul>
+      <div class="tools">
+        <span class="clock"><span id="clockPlace"></span> <time id="clock">--:--</time></span>
+        <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="false">
+          <span class="sound-dot" aria-hidden="true"></span><span id="soundLabel">Sound off</span>
+        </button>
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="zh" aria-pressed="false">中</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="hero-mid">
+      <div class="hero-intro">
+        <p class="cn-name" id="cnName">张天琪</p>
+        <p class="tagline" data-site="tagline"></p>
+      </div>
+      <ul class="roles" id="roles"></ul>
+    </div>
+
+    <h1 class="name" id="name">
+      <span class="name-line" data-line="1">Tianqi Zhang/</span>
+      <span class="name-line" data-line="2">Mercu</span>
+    </h1>
+
+    <div class="hero-foot">
+      <span class="label">FIG. 00 — <span data-i18n="hero.hint">Move across the name. Turn sound on to play it.</span></span>
+      <a class="label" href="#work" data-i18n="hero.scroll">Scroll for work ↓</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="work" id="work" aria-labelledby="workHeading">
+    <div class="wrap work-grid">
+      <aside class="work-side">
+        <div class="side-sticky">
+          <p class="label">INDEX · <span id="workHeading" data-i18n="work.label">Selected work</span></p>
+          <p class="intro" data-site="intro"></p>
+          <div class="filters" id="filters" role="group" aria-label="Filter work"></div>
+          <p class="side-note label" data-i18n="work.note">Click a window to listen or watch.</p>
+        </div>
+      </aside>
+      <div class="windows" id="windows"></div>
+    </div>
+  </section>
+
+  <section class="about" id="about" aria-labelledby="aboutHeading">
+    <div class="wrap about-grid">
+      <div class="about-side">
+        <p class="label about-label">FIG. A — <span id="aboutHeading" data-i18n="about.label">About</span></p>
+        <figure class="portrait" id="portrait">
+          <div class="win-bar">
+            <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="win-fig">FIG. A</span>
+            <span class="win-file" id="portraitFile">portrait.jpg</span>
+          </div>
+          <div class="portrait-frame" id="portraitFrame"></div>
+          <figcaption class="label" id="portraitCap"></figcaption>
+        </figure>
+      </div>
+      <div class="about-text" id="aboutText"></div>
+      <div class="cv">
+        <p class="label" data-i18n="about.cv">Selected activity</p>
+        <ol class="cv-list" id="cvList"></ol>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="contact" id="contact">
+  <div class="wrap">
+    <p class="label">FIG. C — <span data-i18n="contact.label">Contact</span></p>
+    <p class="contact-lead" data-i18n="contact.lead">For film and media scoring, commissions and collaborations.</p>
+    <div class="email-row">
+      <a class="email" id="email" href="#"></a>
+      <button type="button" class="copy-btn" id="copyEmail" data-i18n="contact.copy">Copy email</button>
+    </div>
+    <ul class="links" id="footLinks"></ul>
+    <div class="footer-name" aria-hidden="true">Mercu</div>
+    <div class="foot-meta label">
+      <span>© <span id="year"></span> <span id="footName">Tianqi Zhang / Mercu</span></span>
+      <a href="#top" data-i18n="foot.top">Back to top ↑</a>
+    </div>
+  </div>
+</footer>
+
+<div class="player" id="player" hidden>
+  <div class="player-inner">
+    <button type="button" class="p-btn" id="pToggle" aria-label="Pause">
+      <svg viewBox="0 0 24 24" class="i-pause"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+      <svg viewBox="0 0 24 24" class="i-play"><path d="M7 4.5v15l12-7.5z"/></svg>
+    </button>
+    <div class="p-info">
+      <span class="label p-fig" id="pFig"></span>
+      <span class="p-title" id="pTitle"></span>
+    </div>
+    <canvas class="p-scope" id="pScope" aria-hidden="true"></canvas>
+    <div class="p-track">
+      <input type="range" id="pSeek" min="0" max="1000" value="0" step="1" aria-label="Seek">
+      <span class="p-time label" id="pTime">0:00 / 0:00</span>
+    </div>
+    <button type="button" class="p-close" id="pClose" aria-label="Close player">×</button>
+  </div>
+</div>
+<audio id="audio" preload="metadata"></audio>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-win">
+    <div class="win-bar">
+      <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="win-fig" id="modalFig"></span>
+      <span class="win-file" id="modalFile"></span>
+      <button type="button" class="modal-close" id="modalClose" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-cap">
+      <h3 id="modalTitle"></h3>
+      <p class="label" id="modalRole"></p>
+      <p id="modalDesc"></p>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,733 @@
+/* Mercu / Tianqi Zhang — portfolio
+   Content lives in content/site.json and content/works.json (edited through Pages CMS).
+   This file only renders it. */
+(() => {
+  'use strict';
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+
+  /* ───────── interface text (EN / 中文) ───────── */
+  const UI = {
+    en: {
+      'nav.work': 'Work', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'sound.off': 'Sound off', 'sound.on': 'Sound on',
+      'hero.hint': 'Move across the name. Turn sound on to play it.',
+      'hero.scroll': 'Scroll for work ↓',
+      'work.label': 'Selected work', 'work.note': 'Click a window to listen or watch.',
+      'work.all': 'All', 'work.empty': 'Nothing in this category yet.',
+      'work.error': 'The work list could not be loaded. If you opened index.html by double-clicking it, start a local server instead (see README).',
+      'about.label': 'About', 'about.cv': 'Selected activity',
+      'photo.empty': 'Your photo goes here. Upload it in the editor under Profile & About → Photo.',
+      'contact.label': 'Contact', 'contact.lead': 'For film and media scoring, commissions and collaborations.',
+      'contact.copy': 'Copy email', 'contact.copied': 'Copied',
+      'foot.top': 'Back to top ↑', 'localTime': 'Local time',
+      'type.audio': 'Listen', 'type.video': 'Watch', 'type.embed': 'Watch', 'type.none': 'Open',
+      'player.play': 'Play', 'player.pause': 'Pause', 'player.close': 'Close player',
+      'more': 'More ↗'
+    },
+    zh: {
+      'nav.work': '作品', 'nav.about': '关于', 'nav.contact': '联系',
+      'sound.off': '声音 关', 'sound.on': '声音 开',
+      'hero.hint': '在名字上移动鼠标。打开声音，就能演奏它。',
+      'hero.scroll': '向下查看作品 ↓',
+      'work.label': '作品精选', 'work.note': '点击小窗即可试听或观看。',
+      'work.all': '全部', 'work.empty': '这个类别暂时还没有作品。',
+      'work.error': '作品列表加载失败。如果你是直接双击打开 index.html，请改用本地服务器预览（见 README）。',
+      'about.label': '关于', 'about.cv': '经历',
+      'photo.empty': '这里放你的照片。在后台“简介与网站信息 → 照片”上传。',
+      'contact.label': '联系', 'contact.lead': '影视与媒体配乐、委约创作及合作，欢迎来信。',
+      'contact.copy': '复制邮箱', 'contact.copied': '已复制',
+      'foot.top': '回到顶部 ↑', 'localTime': '当地时间',
+      'type.audio': '试听', 'type.video': '观看', 'type.embed': '观看', 'type.none': '打开',
+      'player.play': '播放', 'player.pause': '暂停', 'player.close': '关闭播放器',
+      'more': '更多 ↗'
+    }
+  };
+
+  /* Category keys must match the "category" options in .pages.yml */
+  const CATS = {
+    film:       { en: 'Film & TV',    zh: '影视配乐' },
+    game:       { en: 'Games',        zh: '游戏音乐' },
+    concert:    { en: 'Concert',      zh: '音乐会作品' },
+    electronic: { en: 'Electronic',   zh: '电子 / 计算机音乐' },
+    instrument: { en: 'Instruments',  zh: '乐器与交互' }
+  };
+  const COVER_PALETTES = {
+    film:       { bg: '#052628', line: 'rgba(228,238,235,.78)', hi: '#41e2c8', text: 'rgba(159,196,191,.8)' },
+    game:       { bg: '#062f31', line: 'rgba(159,196,191,.85)', hi: '#41e2c8', text: 'rgba(159,196,191,.8)' },
+    concert:    { bg: '#0b3a3c', line: 'rgba(242,247,245,.82)', hi: '#ffffff', text: 'rgba(228,238,235,.7)' },
+    electronic: { bg: '#041e20', line: 'rgba(65,226,200,.85)',  hi: '#e4eeeb', text: 'rgba(65,226,200,.75)' },
+    instrument: { bg: '#e4eeeb', line: 'rgba(10,37,38,.8)',     hi: '#0e7470', text: 'rgba(14,116,112,.85)' }
+  };
+
+  /* ───────── state ───────── */
+  let site = {};
+  let works = [];
+  let lang = 'en';
+  let filter = 'all';
+  let playingId = null;
+  let modalWork = null;
+
+  try {
+    const saved = localStorage.getItem('lang');
+    if (saved === 'en' || saved === 'zh') lang = saved;
+    else if ((navigator.language || '').toLowerCase().startsWith('zh')) lang = 'zh';
+  } catch (e) { /* storage blocked: keep default */ }
+
+  const t = (k) => (UI[lang] && UI[lang][k]) || UI.en[k] || k;
+  const f = (obj, key) => (obj && (obj[`${key}_${lang}`] || obj[`${key}_en`] || obj[`${key}_zh`])) || '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const mediaUrl = (p) => {
+    if (!p) return '';
+    if (/^(https?:)?\/\//.test(p) || p.startsWith('data:')) return p;
+    return p.replace(/^\/+/, '');            // keep paths relative so the site works in a sub-folder
+  };
+  const slug = (s) => String(s || 'untitled').toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').slice(0, 40) || 'untitled';
+  const basename = (p) => (p || '').split('/').pop();
+  const fmtTime = (s) => (!isFinite(s) || s < 0) ? '0:00' : `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}`;
+
+  function hash(str) {
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    return (h >>> 0);
+  }
+  function mulberry32(a) {
+    return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let x = Math.imul(a ^ (a >>> 15), 1 | a); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+  }
+
+  /* ───────── video embeds ───────── */
+  function parseEmbed(url) {
+    if (!url) return null;
+    let m;
+    if ((m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/))) {
+      return { kind: 'youtube', id: m[1], src: `https://www.youtube-nocookie.com/embed/${m[1]}?autoplay=1&rel=0`, thumb: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`, host: 'youtube.com' };
+    }
+    if ((m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/))) {
+      return { kind: 'vimeo', id: m[1], src: `https://player.vimeo.com/video/${m[1]}?autoplay=1&title=0&byline=0`, host: 'vimeo.com' };
+    }
+    if ((m = url.match(/bilibili\.com\/video\/(BV[\w]+)/i))) {
+      return { kind: 'bilibili', id: m[1], src: `https://player.bilibili.com/player.html?bvid=${m[1]}&autoplay=1&high_quality=1`, host: 'bilibili.com' };
+    }
+    return { kind: 'other', src: url, host: (() => { try { return new URL(url).hostname; } catch (e) { return 'embed'; } })() };
+  }
+  function kindOf(w) {
+    if (w.media_type === 'audio' && w.audio) return 'audio';
+    if (w.media_type === 'video' && w.video) return 'video';
+    if (w.media_type === 'embed' && w.embed_url) return 'embed';
+    // be forgiving if media_type was left unset
+    if (w.audio) return 'audio';
+    if (w.video) return 'video';
+    if (w.embed_url) return 'embed';
+    return 'none';
+  }
+
+  /* ───────── audio engine (shared by player, theremin, visuals) ───────── */
+  const audio = $('#audio');
+  let actx = null, analyser = null, master = null, mediaSrc = null, routed = false;
+  let freqData = null, timeData = null;
+  let theremin = null;
+  let soundOn = false;
+
+  function ensureCtx() {
+    if (actx) { if (actx.state === 'suspended') actx.resume(); return actx; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    actx = new AC();
+    master = actx.createGain();
+    analyser = actx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.82;
+    master.connect(analyser);
+    analyser.connect(actx.destination);
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    timeData = new Uint8Array(analyser.fftSize);
+    return actx;
+  }
+  function routeAudioElement() {
+    if (mediaSrc || !ensureCtx()) return;
+    // Only same-origin media can be analysed; anything else would play silently through Web Audio.
+    try {
+      const u = new URL(audio.currentSrc || audio.src, location.href);
+      if (u.origin !== location.origin) return;
+      mediaSrc = actx.createMediaElementSource(audio);
+      mediaSrc.connect(master);
+      routed = true;
+    } catch (e) { routed = false; }
+  }
+
+  // The name is playable: x = pitch (A minor pentatonic, 3 octaves), y = loudness.
+  const PENTA = [0, 3, 5, 7, 10];
+  function buildTheremin() {
+    if (theremin || !ensureCtx()) return;
+    const o1 = actx.createOscillator(); o1.type = 'triangle';
+    const o2 = actx.createOscillator(); o2.type = 'sine';
+    const o2g = actx.createGain(); o2g.gain.value = 0.25;
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1600; lp.Q.value = 0.7;
+    const vca = actx.createGain(); vca.gain.value = 0;
+    const delay = actx.createDelay(1); delay.delayTime.value = 0.31;
+    const fb = actx.createGain(); fb.gain.value = 0.32;
+    const wet = actx.createGain(); wet.gain.value = 0.28;
+    o1.connect(lp); o2.connect(o2g).connect(lp); lp.connect(vca);
+    vca.connect(master); vca.connect(delay); delay.connect(fb).connect(delay); delay.connect(wet).connect(master);
+    o1.start(); o2.start();
+    theremin = { o1, o2, vca, lp, freq: 220 };
+  }
+  function thereminUpdate(nx, ny, active) {
+    if (!theremin) return;
+    const now = actx.currentTime;
+    const steps = PENTA.length * 3;
+    const idx = Math.min(steps, Math.max(0, Math.floor(nx * (steps + 1))));
+    const semis = Math.floor(idx / PENTA.length) * 12 + PENTA[idx % PENTA.length];
+    const freq = 110 * Math.pow(2, semis / 12);
+    theremin.freq = freq;
+    theremin.o1.frequency.setTargetAtTime(freq, now, 0.025);
+    theremin.o2.frequency.setTargetAtTime(freq * 2, now, 0.025);
+    theremin.lp.frequency.setTargetAtTime(700 + (1 - ny) * 2400, now, 0.05);
+    const g = active && soundOn ? 0.05 + (1 - ny) * 0.11 : 0;
+    theremin.vca.gain.setTargetAtTime(g, now, active ? 0.04 : 0.18);
+  }
+
+  /* ───────── giant name ───────── */
+  const nameEl = $('#name');
+  const hero = $('#top');
+  let letters = [];
+  const REST_W = 118, REST_G = 820;
+  const PAPER = [228, 238, 235], GLOW = [65, 226, 200];
+
+  function buildName() {
+    const l1 = site.name_line1 || 'Tianqi Zhang/';
+    const l2 = site.name_line2 || 'Mercu';
+    nameEl.setAttribute('aria-label', `${l1} ${l2}`);
+    const lines = $$('.name-line', nameEl);
+    [l1, l2].forEach((txt, li) => {
+      const line = lines[li];
+      line.setAttribute('aria-hidden', 'true');
+      line.innerHTML = '';
+      for (const ch of txt) {
+        const s = document.createElement('span');
+        s.className = ch === ' ' ? 'ch sp' : 'ch';
+        s.textContent = ch === ' ' ? ' ' : ch;
+        line.appendChild(s);
+      }
+    });
+    fitName();
+  }
+  function fitName() {
+    const avail = nameEl.clientWidth;
+    if (!avail) return;
+    letters = [];
+    $$('.name-line', nameEl).forEach((line) => {
+      $$('.ch', line).forEach((c) => { c.style.removeProperty('--w'); c.style.removeProperty('--g'); c.style.color = ''; });
+      line.style.fontSize = '100px';
+      line.style.width = 'max-content';
+      const w = line.getBoundingClientRect().width;
+      line.style.width = '';
+      line.style.fontSize = `${Math.max(24, (100 * avail / w) * 0.992)}px`;
+    });
+    const foot = $('.footer-name');
+    if (foot) {
+      foot.textContent = (site.name_line2 || 'Mercu').replace(/\/\s*$/, '');
+      foot.style.fontSize = '100px';
+      const fw = foot.getBoundingClientRect().width;
+      const fa = foot.parentElement.clientWidth;
+      if (fw) foot.style.fontSize = `${(100 * fa / fw) * 0.99}px`;
+    }
+    const r = nameEl.getBoundingClientRect();
+    const all = $$('.ch', nameEl);
+    all.forEach((el, i) => {
+      const cr = el.getBoundingClientRect();
+      letters.push({ el, i, cx: cr.left - r.left + cr.width / 2, cy: cr.top - r.top + cr.height / 2, nx: i / Math.max(1, all.length - 1), v: 0, last: -1 });
+    });
+  }
+
+  /* pointer over hero */
+  const ptr = { x: 0, y: 0, nx: 0.5, ny: 0.5, active: false };
+  hero.addEventListener('pointermove', (e) => {
+    const r = hero.getBoundingClientRect();
+    ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top;
+    ptr.nx = Math.min(1, Math.max(0, ptr.x / r.width));
+    ptr.ny = Math.min(1, Math.max(0, ptr.y / r.height));
+    ptr.active = true;
+    if (soundOn) thereminUpdate(ptr.nx, ptr.ny, true);
+  });
+  hero.addEventListener('pointerleave', () => { ptr.active = false; if (soundOn) thereminUpdate(ptr.nx, ptr.ny, false); });
+  hero.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') { ptr.active = false; thereminUpdate(ptr.nx, ptr.ny, false); } });
+
+  $('#soundToggle').addEventListener('click', () => {
+    soundOn = !soundOn;
+    if (soundOn) { ensureCtx(); buildTheremin(); }
+    else if (theremin) thereminUpdate(ptr.nx, ptr.ny, false);
+    $('#soundToggle').setAttribute('aria-pressed', String(soundOn));
+    $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
+  });
+
+  /* ───────── canvases ───────── */
+  const heroCv = $('#heroScope');
+  const heroCtx = heroCv.getContext('2d');
+  const pCv = $('#pScope');
+  const pCtx = pCv.getContext('2d');
+  const dpr = () => Math.min(2, window.devicePixelRatio || 1);
+  function sizeCanvas(cv) {
+    const r = cv.getBoundingClientRect();
+    const d = dpr();
+    const w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  }
+
+  let heroVisible = true;
+  new IntersectionObserver(([en]) => { heroVisible = en.isIntersecting; }).observe(hero);
+
+  const isPlaying = () => playingId && !audio.paused;
+  const thereminLive = () => soundOn && theremin && ptr.active;
+
+  function bandEnergy(nx, time, i) {
+    if (routed || thereminLive()) {
+      const n = freqData.length;
+      const lo = 3, hi = n * 0.5;
+      const bin = Math.floor(lo * Math.pow(hi / lo, nx));
+      const v = (freqData[bin] + freqData[Math.min(n - 1, bin + 1)]) / 510;
+      return Math.pow(v, 1.7);
+    }
+    // media we can't analyse: a believable stand-in
+    return Math.pow(0.5 + 0.5 * Math.sin(time * 5.1 + i * 1.7) * Math.sin(time * 1.3 + i * 0.6), 2) * 0.8;
+  }
+
+  function drawWave(ctx, W, H, yMid, amp, time, live, color, width, ghost) {
+    ctx.beginPath();
+    const step = Math.max(2, Math.floor(W / 420));
+    for (let x = 0; x <= W; x += step) {
+      const nx = x / W;
+      let y;
+      if (live) {
+        const idx = Math.floor(nx * (timeData.length - 1));
+        y = (timeData[idx] - 128) / 128 * amp * (ghost ? 0.6 : 1);
+      } else {
+        const cyc = 2 + ptr.nx * 9;
+        y = (Math.sin(nx * TAU * cyc + time * 2.4 + (ghost ? 1.1 : 0)) * 0.7 +
+             Math.sin(nx * TAU * cyc * 2.01 - time * 1.7) * 0.2 +
+             Math.sin(nx * TAU * 0.5 + time * 0.3) * 0.25) * amp * (ghost ? 0.55 : 1);
+      }
+      const taper = Math.sin(Math.PI * nx);
+      if (x === 0) ctx.moveTo(x, yMid + y * taper); else ctx.lineTo(x, yMid + y * taper);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke();
+  }
+
+  function drawHero(time) {
+    sizeCanvas(heroCv);
+    const W = heroCv.width, H = heroCv.height, d = dpr();
+    heroCtx.clearRect(0, 0, W, H);
+    const live = !!analyser && (thereminLive() || (isPlaying() && routed));
+    const proximity = ptr.active ? 1 - Math.abs(ptr.ny - 0.5) : 0.25;
+    const amp = live ? H * 0.22 : (8 + 46 * proximity * (ptr.active ? 1 : 0.4)) * d;
+    const yMid = H * 0.5;
+    heroCtx.save();
+    heroCtx.shadowColor = 'rgba(65,226,200,.6)'; heroCtx.shadowBlur = 12 * d;
+    drawWave(heroCtx, W, H, yMid, amp, time, live, 'rgba(65,226,200,.55)', 1.4 * d, false);
+    heroCtx.restore();
+    drawWave(heroCtx, W, H, yMid, amp, time, live, 'rgba(159,196,191,.16)', 1 * d, true);
+
+    if (ptr.active) {
+      const x = ptr.x * d, y = ptr.y * d;
+      heroCtx.strokeStyle = 'rgba(65,226,200,.28)'; heroCtx.lineWidth = d;
+      heroCtx.beginPath(); heroCtx.moveTo(x, 0); heroCtx.lineTo(x, H); heroCtx.moveTo(0, y); heroCtx.lineTo(W, y); heroCtx.stroke();
+      heroCtx.font = `${10 * d}px "Martian Mono", monospace`;
+      heroCtx.fillStyle = 'rgba(65,226,200,.9)';
+      const txt = soundOn && theremin
+        ? `${theremin.freq.toFixed(1)} HZ · ${Math.round((1 - ptr.ny) * 100)}%`
+        : `X ${ptr.nx.toFixed(2)}  Y ${(1 - ptr.ny).toFixed(2)}`;
+      const tx = Math.min(x + 10 * d, W - heroCtx.measureText(txt).width - 8 * d);
+      heroCtx.fillText(txt, tx, Math.max(16 * d, y - 10 * d));
+    }
+  }
+
+  function drawPlayer(time) {
+    if ($('#player').hidden || pCv.offsetParent === null) return;
+    sizeCanvas(pCv);
+    const W = pCv.width, H = pCv.height, d = dpr();
+    pCtx.clearRect(0, 0, W, H);
+    const playing = isPlaying();
+    if (playing && routed) {
+      drawWave(pCtx, W, H, H / 2, H * 0.45, time, true, 'rgba(65,226,200,.9)', 1.2 * d, false);
+    } else {
+      // bars stand-in when paused or not analysable
+      const bars = 28, bw = W / bars;
+      pCtx.fillStyle = 'rgba(65,226,200,.75)';
+      for (let i = 0; i < bars; i++) {
+        const v = playing ? bandEnergy(i / bars, time, i) : 0.06;
+        const h = Math.max(2 * d, v * H * 0.9);
+        pCtx.fillRect(i * bw + bw * 0.25, (H - h) / 2, bw * 0.5, h);
+      }
+    }
+  }
+
+  function frame(ts) {
+    const time = ts / 1000;
+    const live = !!analyser && (thereminLive() || (isPlaying() && routed));
+    if (analyser && (live || isPlaying())) { analyser.getByteFrequencyData(freqData); analyser.getByteTimeDomainData(timeData); }
+
+    if (heroVisible && letters.length) {
+      const rName = nameEl.getBoundingClientRect(), rHero = hero.getBoundingClientRect();
+      const px = ptr.x - (rName.left - rHero.left), py = ptr.y - (rName.top - rHero.top);
+      const sigma = Math.max(60, rName.width * 0.07);
+      const playingNow = isPlaying() || thereminLive();
+      for (const L of letters) {
+        let target = 0;
+        if (ptr.active) {
+          const dx = (L.cx - px) / sigma, dy = (L.cy - py) / (sigma * 1.6);
+          target = Math.exp(-(dx * dx + dy * dy) / 2);
+        }
+        if (playingNow) target = Math.max(target, bandEnergy(L.nx, time, L.i) * 1.15);
+        else if (!ptr.active && !reduceMotion) target = Math.pow(Math.max(0, Math.sin(time * 0.9 - L.nx * 5)), 10) * 0.28;
+        L.v += (Math.min(1, target) - L.v) * 0.14;
+        const q = Math.round(L.v * 400) / 400;
+        if (q !== L.last) {
+          L.last = q;
+          L.el.style.setProperty('--w', (REST_W - q * 56).toFixed(1));
+          L.el.style.setProperty('--g', (REST_G - q * 640).toFixed(0));
+          const c = PAPER.map((p, k) => Math.round(p + (GLOW[k] - p) * Math.min(1, q * 1.4)));
+          L.el.style.color = q > 0.003 ? `rgb(${c})` : '';
+        }
+      }
+      drawHero(time);
+    }
+    drawPlayer(time);
+    requestAnimationFrame(frame);
+  }
+
+  /* ───────── generative covers ───────── */
+  function drawCover(cv, w, figNo) {
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const pal = COVER_PALETTES[w.category] || COVER_PALETTES.film;
+    const rnd = mulberry32(hash(String(w.title_en || w.title_zh || figNo)));
+    ctx.fillStyle = pal.bg; ctx.fillRect(0, 0, W, H);
+
+    // blueprint grid
+    ctx.strokeStyle = pal.bg === '#e4eeeb' ? 'rgba(10,37,38,.07)' : 'rgba(228,238,235,.05)';
+    ctx.lineWidth = 1;
+    const g = W / 16;
+    for (let x = g; x < W; x += g) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = g; y < H; y += g) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    // ridge plot: stacked waveforms, like a spectrogram seen from the side
+    const n = 20 + Math.floor(rnd() * 10);
+    const top = H * 0.24, bottom = H * 0.9, step = (bottom - top) / n;
+    const center = 0.28 + rnd() * 0.44, spread = 0.1 + rnd() * 0.16;
+    const f1 = 2 + rnd() * 3, f2 = 6 + rnd() * 8, f3 = 14 + rnd() * 20;
+    const hiLine = Math.floor(rnd() * n);
+    for (let i = 0; i < n; i++) {
+      const p1 = rnd() * TAU, p2 = rnd() * TAU, p3 = rnd() * TAU;
+      const peak = step * (1.5 + rnd() * 5.5) * (0.4 + 0.6 * Math.sin(Math.PI * (i + 1) / (n + 1)));
+      const y0 = top + i * step;
+      const pts = [];
+      for (let x = 0; x <= W; x += 3) {
+        const nx = x / W;
+        const env = Math.exp(-((nx - center) ** 2) / (2 * spread * spread));
+        const noise = Math.sin(nx * f1 * TAU + p1) * 0.5 + Math.sin(nx * f2 * TAU + p2) * 0.32 + Math.sin(nx * f3 * TAU + p3) * 0.18;
+        pts.push([x, y0 - env * peak * (0.7 + 0.3 * noise) - noise * step * 0.12]);
+      }
+      ctx.beginPath(); pts.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fillStyle = pal.bg; ctx.fill();
+      ctx.beginPath(); pts.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.strokeStyle = i === hiLine ? pal.hi : pal.line;
+      ctx.lineWidth = i === hiLine ? 2.2 : 1.3;
+      ctx.stroke();
+    }
+    const cat = (CATS[w.category] && CATS[w.category][lang]) || '';
+    ctx.font = `${Math.round(W / 46)}px "Martian Mono", "Noto Sans SC", monospace`;
+    ctx.fillStyle = pal.text;
+    ctx.fillText(`FIG. ${figNo}`, W * 0.04, H * 0.09);
+    const cw = ctx.measureText(cat.toUpperCase()).width;
+    ctx.fillText(cat.toUpperCase(), W * 0.96 - cw, H * 0.09);
+  }
+
+  /* ───────── works ───────── */
+  const visibleWorks = () => works.filter((w) => !w.hidden);
+
+  function renderFilters() {
+    const list = visibleWorks();
+    const present = Object.keys(CATS).filter((k) => list.some((w) => w.category === k));
+    if (filter !== 'all' && !present.includes(filter)) filter = 'all';
+    const btn = (key, label, count) =>
+      `<button type="button" class="filter" data-filter="${key}" aria-pressed="${filter === key}">${esc(label)}<sup>${count}</sup></button>`;
+    $('#filters').innerHTML = btn('all', t('work.all'), list.length) +
+      present.map((k) => btn(k, CATS[k][lang], list.filter((w) => w.category === k).length)).join('');
+  }
+
+  function cardHTML(w, idx) {
+    const fig = pad(idx + 1);
+    const kind = kindOf(w);
+    const title = f(w, 'title') || 'Untitled';
+    const role = f(w, 'role');
+    const desc = f(w, 'description');
+    const emb = kind === 'embed' ? parseEmbed(w.embed_url) : null;
+    const file = kind === 'audio' ? basename(w.audio)
+      : kind === 'video' ? basename(w.video)
+      : kind === 'embed' ? `${emb.host}/${emb.id || ''}`
+      : `${slug(w.title_en || title)}.score`;
+    const meta = [role, w.year].filter(Boolean).join(' · ');
+    let cover;
+    if (w.cover) cover = `<img class="win-cover" src="${esc(mediaUrl(w.cover))}" alt="" loading="lazy">`;
+    else if (emb && emb.thumb) cover = `<img class="win-cover" src="${esc(emb.thumb)}" alt="" loading="lazy">`;
+    else cover = `<canvas class="win-cover" data-gen="${idx}" width="${w.featured ? 1280 : 800}" height="${w.featured ? 720 : 600}"></canvas>`;
+    const icon = kind === 'audio' || kind === 'none'
+      ? '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M3 6h13v12H3zM17 10l4-2.5v9L17 14z"/></svg>';
+    const hasAction = kind !== 'none' || w.link;
+    const viewTag = hasAction ? 'button type="button"' : 'div';
+    const viewClose = hasAction ? 'button' : 'div';
+    return `
+      <article class="win${w.featured ? ' featured' : ''}${playingId === w._id ? ' playing' : ''}${playingId === w._id && audio.paused ? ' paused' : ''}" data-id="${w._id}" style="--i:${idx}">
+        <div class="win-bar">
+          <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="win-fig">FIG. ${fig}</span>
+          <span class="win-file">${esc(file)}</span>
+        </div>
+        <${viewTag} class="win-view" ${hasAction ? `aria-label="${esc(t('type.' + kind))}: ${esc(title)}"` : ''}>
+          ${cover}
+          ${hasAction ? `<span class="win-play">${icon}<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${esc(t('type.' + kind))}</span>` : ''}
+        </${viewClose}>
+        <div class="win-cap">
+          <h3>${esc(title)}</h3>
+          ${meta ? `<p class="win-role label">${esc(meta)}</p>` : ''}
+          ${desc ? `<p class="win-desc">${esc(desc)}</p>` : ''}
+          ${w.link ? `<a class="win-link" href="${esc(w.link)}" target="_blank" rel="noopener">${esc(t('more'))}</a>` : ''}
+        </div>
+      </article>`;
+  }
+
+  function renderWorks() {
+    const all = visibleWorks();
+    const shown = all.filter((w) => filter === 'all' || w.category === filter);
+    const box = $('#windows');
+    if (!shown.length) { box.innerHTML = `<p class="empty">${esc(t('work.empty'))}</p>`; return; }
+    box.innerHTML = shown.map((w) => cardHTML(w, all.indexOf(w))).join('');
+    $$('canvas[data-gen]', box).forEach((cv) => {
+      const idx = +cv.dataset.gen;
+      drawCover(cv, all[idx], pad(idx + 1));
+    });
+  }
+
+  $('#filters').addEventListener('click', (e) => {
+    const b = e.target.closest('.filter');
+    if (!b) return;
+    filter = b.dataset.filter;
+    renderFilters(); renderWorks();
+  });
+  $('#windows').addEventListener('click', (e) => {
+    const view = e.target.closest('button.win-view');
+    if (!view) return;
+    const id = view.closest('.win').dataset.id;
+    const w = works.find((x) => x._id === id);
+    if (w) openWork(w);
+  });
+
+  function figOf(w) { return `FIG. ${pad(visibleWorks().indexOf(w) + 1)}`; }
+
+  function openWork(w) {
+    const kind = kindOf(w);
+    if (kind === 'audio') return playAudio(w);
+    if (kind === 'video' || kind === 'embed') return openModal(w, kind);
+    if (w.link) window.open(w.link, '_blank', 'noopener');
+  }
+
+  /* ───────── audio player ───────── */
+  const player = $('#player');
+  const seek = $('#pSeek');
+
+  function playAudio(w) {
+    ensureCtx();
+    if (playingId === w._id) { audio.paused ? audio.play() : audio.pause(); return; }
+    playingId = w._id;
+    audio.src = mediaUrl(w.audio);
+    routeAudioElement();
+    audio.play().catch(() => {});
+    player.hidden = false;
+    updatePlayerText();
+    markCards();
+  }
+  function updatePlayerText() {
+    const w = works.find((x) => x._id === playingId);
+    if (!w) return;
+    $('#pFig').textContent = `${figOf(w)} · ${(CATS[w.category] && CATS[w.category][lang]) || ''}`;
+    $('#pTitle').textContent = f(w, 'title');
+    $('#pClose').setAttribute('aria-label', t('player.close'));
+    $('#pToggle').setAttribute('aria-label', t(audio.paused ? 'player.play' : 'player.pause'));
+  }
+  function markCards() {
+    $$('.win').forEach((c) => {
+      const on = c.dataset.id === playingId;
+      c.classList.toggle('playing', on);
+      c.classList.toggle('paused', on && audio.paused);
+    });
+    player.classList.toggle('paused', audio.paused);
+    $('#pToggle').setAttribute('aria-label', t(audio.paused ? 'player.play' : 'player.pause'));
+  }
+  audio.addEventListener('play', markCards);
+  audio.addEventListener('pause', markCards);
+  audio.addEventListener('ended', markCards);
+  audio.addEventListener('timeupdate', () => {
+    const d = audio.duration || 0;
+    const p = d ? audio.currentTime / d : 0;
+    if (!seek.matches(':active')) seek.value = Math.round(p * 1000);
+    seek.style.setProperty('--pct', `${p * 100}%`);
+    $('#pTime').textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(d)}`;
+  });
+  seek.addEventListener('input', () => {
+    if (audio.duration) audio.currentTime = (seek.value / 1000) * audio.duration;
+  });
+  $('#pToggle').addEventListener('click', () => { ensureCtx(); audio.paused ? audio.play() : audio.pause(); });
+  $('#pClose').addEventListener('click', () => {
+    audio.pause(); playingId = null; player.hidden = true; markCards();
+  });
+
+  /* ───────── video modal ───────── */
+  const modal = $('#modal');
+  function openModal(w, kind) {
+    if (!audio.paused) audio.pause();
+    modalWork = w;
+    const body = $('#modalBody');
+    if (kind === 'video') {
+      body.innerHTML = `<video controls autoplay playsinline src="${esc(mediaUrl(w.video))}"${w.cover ? ` poster="${esc(mediaUrl(w.cover))}"` : ''}></video>`;
+      $('#modalFile').textContent = basename(w.video);
+    } else {
+      const emb = parseEmbed(w.embed_url);
+      body.innerHTML = `<iframe src="${esc(emb.src)}" title="${esc(f(w, 'title'))}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+      $('#modalFile').textContent = emb.host;
+    }
+    fillModalText();
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    $('#modalClose').focus({ preventScroll: true });
+  }
+  function fillModalText() {
+    if (!modalWork) return;
+    const w = modalWork;
+    $('#modalFig').textContent = figOf(w);
+    $('#modalTitle').textContent = f(w, 'title');
+    $('#modalRole').textContent = [f(w, 'role'), w.year].filter(Boolean).join(' · ');
+    $('#modalDesc').textContent = f(w, 'description');
+  }
+  function closeModal() {
+    modal.hidden = true;
+    $('#modalBody').innerHTML = '';
+    modalWork = null;
+    document.body.style.overflow = '';
+  }
+  $('#modalClose').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+  /* ───────── site text, about, contact ───────── */
+  function renderSite() {
+    $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    $$('[data-site]').forEach((el) => { el.textContent = f(site, el.dataset.site); });
+    $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
+
+    const roles = site[`roles_${lang}`] || site.roles_en || [];
+    $('#roles').innerHTML = roles.map((r) => `<li>${esc(typeof r === 'string' ? r : r.text || '')}</li>`).join('');
+
+    const about = f(site, 'about');
+    $('#aboutText').innerHTML = about.split(/\n\s*\n/).filter((p) => p.trim()).map((p) => `<p>${esc(p.trim())}</p>`).join('');
+    $('#cvList').innerHTML = (site.cv || []).map((c) =>
+      `<li><span class="yr">${esc(c.year)}</span><span>${esc(f(c, 'text'))}</span></li>`).join('');
+
+    const email = site.email || '';
+    const a = $('#email');
+    a.textContent = email; a.href = email ? `mailto:${email}` : '#';
+    $('#copyEmail').hidden = !email;
+    $('#footLinks').innerHTML = (site.links || []).filter((l) => l && l.url).map((l) => {
+      const label = (lang === 'zh' && l.label_zh) || l.label || l.label_zh || l.url;
+      return `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(label)} ↗</a></li>`;
+    }).join('');
+
+    const cn = site.name_zh || '';
+    $('#cnName').textContent = cn;
+    $('#cnName').hidden = !cn;
+    const plain = (x) => String(x || '').replace(/\/\s*$/, '').trim();
+    const fullName = [plain(site.name_line1), plain(site.name_line2)].filter(Boolean).join(' / ');
+    $('#footName').textContent = cn ? `${fullName} · ${cn}` : fullName;
+    nameEl.setAttribute('aria-label', cn ? `${fullName} ${cn}` : fullName);
+
+    const frame = $('#portraitFrame');
+    if (site.photo) {
+      frame.classList.add('has-photo');
+      frame.innerHTML = `<img src="${esc(mediaUrl(site.photo))}" alt="${esc(lang === 'zh' && cn ? cn : fullName)}" loading="lazy">`;
+      $('#portraitFile').textContent = basename(site.photo);
+    } else {
+      frame.classList.remove('has-photo');
+      frame.innerHTML = `<div class="portrait-empty"><div><p class="label">FIG. A · PORTRAIT</p><p>${esc(t('photo.empty'))}</p></div></div>`;
+      $('#portraitFile').textContent = 'portrait.jpg';
+    }
+    $('#portraitCap').textContent = cn ? `${fullName} · ${cn}` : fullName;
+    $('#clockPlace').textContent = f(site, 'location') || t('localTime');
+    tick();
+  }
+
+  $('#copyEmail').addEventListener('click', async () => {
+    const btn = $('#copyEmail');
+    try { await navigator.clipboard.writeText(site.email); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#email')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    btn.textContent = t('contact.copied');
+    setTimeout(() => { btn.textContent = t('contact.copy'); }, 1600);
+  });
+
+  let clockFmt = null;
+  function tick() {
+    if (!clockFmt) {
+      try { clockFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: site.timezone || undefined }); }
+      catch (e) { clockFmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); }
+    }
+    $('#clock').textContent = clockFmt.format(new Date());
+  }
+  setInterval(tick, 15000);
+  $('#year').textContent = new Date().getFullYear();
+
+  /* ───────── language ───────── */
+  function setLang(l) {
+    lang = l;
+    try { localStorage.setItem('lang', l); } catch (e) { /* ignore */ }
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+    $$('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+    renderSite(); renderFilters(); renderWorks();
+    if (playingId) updatePlayerText();
+    fillModalText();
+  }
+  $$('.lang button').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+  /* ───────── boot ───────── */
+  let resizeRaf = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(fitName);
+  });
+
+  async function getJSON(path) {
+    const r = await fetch(path, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(`${path}: ${r.status}`);
+    return r.json();
+  }
+
+  async function boot() {
+    try {
+      const [s, w] = await Promise.all([getJSON('content/site.json'), getJSON('content/works.json')]);
+      site = s || {};
+      const list = Array.isArray(w) ? w : (w && w.works) || [];
+      works = list.map((x, i) => ({ ...x, _id: `w${i}` }));
+    } catch (err) {
+      console.error(err);
+      $('#windows').innerHTML = `<p class="empty">${esc(t('work.error'))}</p>`;
+    }
+    try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 2500))]); } catch (e) { /* ignore */ }
+    buildName();
+    setLang(lang);
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { fitName(); renderWorks(); });
+    requestAnimationFrame(frame);
+  }
+  boot();
+})();

@@ -1,0 +1,75 @@
+{
+  "name_line1": "Tianqi Zhang/",
+  "name_line2": "Mercu",
+  "name_zh": "张天琪",
+  "photo": "",
+  "tagline_en": "Composer working between the concert hall, the screen and the circuit board.",
+  "tagline_zh": "游走于音乐厅、银幕与电路板之间的作曲家。",
+  "roles_en": [
+    "Computer music",
+    "Scoring for visual media",
+    "Instrument design"
+  ],
+  "roles_zh": [
+    "计算机音乐",
+    "影视与媒体配乐",
+    "乐器设计"
+  ],
+  "intro_en": "I write music for film and moving image, make electronic and computer music, and build my own instruments from sensors and microcontrollers.",
+  "intro_zh": "我为电影和动态影像创作配乐，制作电子与计算机音乐，也用传感器和微控制器搭建自己的乐器。",
+  "about_en": "I'm Tianqi Zhang (Mercu), a composer studying computer music and scoring for visual media.\n\nMy work moves between three places: writing for picture, where music has to serve a story frame by frame; electronic and computer music, where sound itself is the material; and instrument building, where I design my own controllers with Arduino and sensors so that gesture, light and touch become part of the score.\n\nReplace this text with your own biography in the editor. Keep the first paragraph short; it is shown larger than the rest.",
+  "about_zh": "我是张天琪（Mercu），一名学习计算机音乐与影视媒体配乐的作曲者。\n\n我的创作在三个方向之间往返：为画面写作，让音乐一帧一帧地服务于故事；电子与计算机音乐，把声音本身当作材料；以及乐器制作，用 Arduino 和传感器设计自己的控制器，让手势、光线和触摸都成为乐谱的一部分。\n\n请在后台把这段文字换成你自己的简介。第一段尽量简短，它会以较大的字号显示。",
+  "location_en": "",
+  "location_zh": "",
+  "timezone": "America/Indiana/Indianapolis",
+  "email": "mztz2734@outlook.com",
+  "links": [
+    {
+      "label": "Instagram",
+      "label_zh": "Instagram",
+      "url": "https://www.instagram.com/tianqizh"
+    },
+    {
+      "label": "Facebook",
+      "label_zh": "Facebook",
+      "url": "https://www.facebook.com/share/1GeVjehMso/"
+    },
+    {
+      "label": "YouTube",
+      "label_zh": "YouTube",
+      "url": "https://www.youtube.com/@MercuZh"
+    },
+    {
+      "label": "Bilibili",
+      "label_zh": "B站",
+      "url": "https://space.bilibili.com/13673392"
+    },
+    {
+      "label": "Xiaohongshu",
+      "label_zh": "小红书",
+      "url": "https://xhslink.cn/o/6vyGAHaKpIm"
+    },
+    {
+      "label": "Douyin",
+      "label_zh": "抖音",
+      "url": "https://www.douyin.com/"
+    }
+  ],
+  "cv": [
+    {
+      "year": "2026",
+      "text_en": "Example: original score for a student short film (replace in the editor)",
+      "text_zh": "示例：学生短片原创配乐（请在后台替换）"
+    },
+    {
+      "year": "2025",
+      "text_en": "Example: performance of a sensor-based instrument (replace in the editor)",
+      "text_zh": "示例：传感器乐器现场演出（请在后台替换）"
+    },
+    {
+      "year": "2024",
+      "text_en": "Example: studies in computer music and scoring for visual media",
+      "text_zh": "示例：开始学习计算机音乐与影视媒体配乐"
+    }
+  ]
+}
