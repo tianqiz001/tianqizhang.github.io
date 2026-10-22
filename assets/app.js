@@ -722,8 +722,9 @@
     }).join('');
 
     const cn = site.name_zh || '';
-    $('#cnName').textContent = cn;
-    $('#cnName').hidden = !cn;
+    // the hero shows the hand-written signature (inline SVG); keep its accessible name in sync
+    const sigEl = $('#cnName svg');
+    if (sigEl && cn) sigEl.setAttribute('aria-label', cn);
     const plain = (x) => String(x || '').replace(/\/\s*$/, '').trim();
     const fullName = [plain(site.name_line1), plain(site.name_line2)].filter(Boolean).join(' / ');
     $('#footName').textContent = cn ? `${fullName} · ${cn}` : fullName;
