@@ -13,94 +13,101 @@ content:
     type: file
     path: content/works.json
     format: json
-    list: true
     fields:
-      - name: title_en
-        label: "Title (English)"
-        type: string
-        required: true
-      - name: title_zh
-        label: "标题（中文）"
-        type: string
-      - name: category
-        label: "Category / 类别"
-        type: select
-        required: true
-        options:
-          values:
-            - name: film
-              label: "Film & TV / 影视配乐"
-            - name: game
-              label: "Games / 游戏音乐"
-            - name: fixedmedia
-              label: "Fixed Media / 固定媒体"
-            - name: electronic
-              label: "Electronic / 电子与计算机音乐"
-            - name: popsongs
-              label: "Pop Songs / 流行歌曲"
-            - name: instrument
-              label: "Instruments / 乐器与交互"
-      - name: year
-        label: "Year / 年份"
-        type: string
-      - name: media_type
-        label: "Media / 播放方式"
-        type: select
-        description: "Pick one, then fill in the matching field below. 选一种，然后填写下面对应的那一栏。"
-        options:
-          values:
-            - name: audio
-              label: "Audio file / 上传音频"
-            - name: video
-              label: "Video file / 上传视频"
-            - name: embed
-              label: "Link: YouTube, Bilibili, Vimeo, NetEase, Spotify, Apple Music, SoundCloud / 链接播放"
-            - name: none
-              label: "No media / 无播放"
-      - name: audio
-        label: "Audio file / 音频文件 (mp3, m4a, wav)"
-        type: file
-        options:
-          categories: [audio]
-      - name: video
-        label: "Video file / 视频文件 (mp4)"
-        type: file
-        description: "Keep uploads under ~50 MB. Use a YouTube / Vimeo / Bilibili link for long videos. 文件请尽量小于 50MB，长视频请用链接。"
-        options:
-          categories: [video]
-      - name: embed_url
-        label: "Video or music link / 视频或音乐链接"
-        type: string
-        description: "Paste the normal page link (YouTube, Bilibili, Vimeo, NetEase Cloud Music, Spotify, Apple Music, SoundCloud). Also used as a backup if an uploaded file fails. 直接粘贴网页地址；上传的文件播放失败时也会自动改用这个链接。"
-      - name: cover
-        label: "Cover image / 封面图 (optional)"
-        type: image
-        description: "Leave empty to get an automatic generated cover. 留空会自动生成封面图案。"
-      - name: role_en
-        label: "Role (English)"
-        type: string
-        description: "e.g. Original score, sound design"
-      - name: role_zh
-        label: "角色（中文）"
-        type: string
-        description: "例如：原创配乐、声音设计"
-      - name: description_en
-        label: "Description (English)"
-        type: text
-      - name: description_zh
-        label: "简介（中文）"
-        type: text
-      - name: link
-        label: "External link / 外部链接 (optional)"
-        type: string
-      - name: featured
-        label: "Featured (large window) / 大窗展示"
-        type: boolean
-        default: false
-      - name: hidden
-        label: "Hide (draft) / 隐藏（草稿）"
-        type: boolean
-        default: false
+      - name: works
+        label: "Works / 作品"
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{index}. {title_en} · {year}"
+        fields:
+          - name: title_en
+            label: "Title (English)"
+            type: string
+            required: true
+          - name: title_zh
+            label: "标题（中文）"
+            type: string
+          - name: category
+            label: "Category / 类别"
+            type: select
+            required: true
+            options:
+              values:
+                - name: film
+                  label: "Film & TV / 影视配乐"
+                - name: game
+                  label: "Games / 游戏音乐"
+                - name: fixedmedia
+                  label: "Fixed Media / 固定媒体"
+                - name: electronic
+                  label: "Electronic / 电子与计算机音乐"
+                - name: popsongs
+                  label: "Pop Songs / 流行歌曲"
+                - name: instrument
+                  label: "Instruments / 乐器与交互"
+          - name: year
+            label: "Year / 年份"
+            type: string
+          - name: media_type
+            label: "Media / 播放方式"
+            type: select
+            description: "Pick one, then fill in the matching field below. 选一种，然后填写下面对应的那一栏。"
+            options:
+              values:
+                - name: audio
+                  label: "Audio file / 上传音频"
+                - name: video
+                  label: "Video file / 上传视频"
+                - name: embed
+                  label: "Link: YouTube, Bilibili, Vimeo, NetEase, Spotify, Apple Music, SoundCloud / 链接播放"
+                - name: none
+                  label: "No media / 无播放"
+          - name: audio
+            label: "Audio file / 音频文件 (mp3, m4a, wav)"
+            type: file
+            options:
+              categories: [audio]
+          - name: video
+            label: "Video file / 视频文件 (mp4)"
+            type: file
+            description: "Keep uploads under ~50 MB. Use a YouTube / Vimeo / Bilibili link for long videos. 文件请尽量小于 50MB，长视频请用链接。"
+            options:
+              categories: [video]
+          - name: embed_url
+            label: "Video or music link / 视频或音乐链接"
+            type: string
+            description: "Paste the normal page link (YouTube, Bilibili, Vimeo, NetEase Cloud Music, Spotify, Apple Music, SoundCloud). Also used as a backup if an uploaded file fails. 直接粘贴网页地址；上传的文件播放失败时也会自动改用这个链接。"
+          - name: cover
+            label: "Cover image / 封面图 (optional)"
+            type: image
+            description: "Leave empty to get an automatic generated cover. 留空会自动生成封面图案。"
+          - name: role_en
+            label: "Role (English)"
+            type: string
+            description: "e.g. Original score, sound design"
+          - name: role_zh
+            label: "角色（中文）"
+            type: string
+            description: "例如：原创配乐、声音设计"
+          - name: description_en
+            label: "Description (English)"
+            type: text
+          - name: description_zh
+            label: "简介（中文）"
+            type: text
+          - name: link
+            label: "External link / 外部链接 (optional)"
+            type: string
+          - name: featured
+            label: "Featured (large window) / 大窗展示"
+            type: boolean
+            default: false
+          - name: hidden
+            label: "Hide (draft) / 隐藏（草稿）"
+            type: boolean
+            default: false
 
   - name: site
     label: "Profile & About / 简介与网站信息"
