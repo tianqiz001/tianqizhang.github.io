@@ -137,7 +137,7 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
   height: clamp(84px, 11vw, 170px);
   width: auto;
   max-width: 100%;
-  margin-left: clamp(0px, 18vw, 280px);   /* the far-right spot the user picked; research areas follow on its right */
+  margin-left: -4px;   /* ink starts on the same left edge as the tagline below */
   filter: drop-shadow(0 0 14px rgba(65, 226, 200, .25));
 }
 .tagline {
