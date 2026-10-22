@@ -1,0 +1,190 @@
+media:
+  input: media
+  output: media
+  rename: safe
+
+settings:
+  content:
+    merge: true
+
+content:
+  - name: works
+    label: "Works / 作品"
+    type: file
+    path: content/works.json
+    format: json
+    list: true
+    fields:
+      - name: title_en
+        label: "Title (English)"
+        type: string
+        required: true
+      - name: title_zh
+        label: "标题（中文）"
+        type: string
+      - name: category
+        label: "Category / 类别"
+        type: select
+        required: true
+        options:
+          values:
+            - name: film
+              label: "Film & TV / 影视配乐"
+            - name: game
+              label: "Games / 游戏音乐"
+            - name: concert
+              label: "Concert / 音乐会作品"
+            - name: electronic
+              label: "Electronic / 电子与计算机音乐"
+            - name: instrument
+              label: "Instruments / 乐器与交互"
+      - name: year
+        label: "Year / 年份"
+        type: string
+      - name: media_type
+        label: "Media / 播放方式"
+        type: select
+        description: "Pick one, then fill in the matching field below. 选一种，然后填写下面对应的那一栏。"
+        options:
+          values:
+            - name: audio
+              label: "Audio file / 上传音频"
+            - name: video
+              label: "Video file / 上传视频"
+            - name: embed
+              label: "YouTube / Vimeo / Bilibili link / 视频链接"
+            - name: none
+              label: "No media / 无播放"
+      - name: audio
+        label: "Audio file / 音频文件 (mp3, m4a, wav)"
+        type: file
+        options:
+          categories: [audio]
+      - name: video
+        label: "Video file / 视频文件 (mp4)"
+        type: file
+        description: "Keep uploads under ~50 MB. Use a YouTube / Vimeo / Bilibili link for long videos. 文件请尽量小于 50MB，长视频请用链接。"
+        options:
+          categories: [video]
+      - name: embed_url
+        label: "Video link / 视频链接"
+        type: string
+        description: "Paste a normal YouTube, Vimeo or Bilibili page link. 直接粘贴视频网页地址即可。"
+      - name: cover
+        label: "Cover image / 封面图 (optional)"
+        type: image
+        description: "Leave empty to get an automatic generated cover. 留空会自动生成封面图案。"
+      - name: role_en
+        label: "Role (English)"
+        type: string
+        description: "e.g. Original score, sound design"
+      - name: role_zh
+        label: "角色（中文）"
+        type: string
+        description: "例如：原创配乐、声音设计"
+      - name: description_en
+        label: "Description (English)"
+        type: text
+      - name: description_zh
+        label: "简介（中文）"
+        type: text
+      - name: link
+        label: "External link / 外部链接 (optional)"
+        type: string
+      - name: featured
+        label: "Featured (large window) / 大窗展示"
+        type: boolean
+        default: false
+      - name: hidden
+        label: "Hide (draft) / 隐藏（草稿）"
+        type: boolean
+        default: false
+
+  - name: site
+    label: "Profile & About / 简介与网站信息"
+    type: file
+    path: content/site.json
+    format: json
+    fields:
+      - name: name_line1
+        label: "Big name, line 1 / 大标题第一行"
+        type: string
+      - name: name_line2
+        label: "Big name, line 2 / 大标题第二行"
+        type: string
+      - name: name_zh
+        label: "中文名"
+        type: string
+      - name: photo
+        label: "Photo / 照片"
+        type: image
+        description: "A portrait, ideally vertical (4:5). 竖版照片最佳（4:5），鼠标移上去会显示原色。"
+      - name: tagline_en
+        label: "Tagline (English)"
+        type: text
+      - name: tagline_zh
+        label: "一句话介绍（中文）"
+        type: text
+      - name: roles_en
+        label: "Practice list (English)"
+        type: string
+        list: true
+      - name: roles_zh
+        label: "方向列表（中文）"
+        type: string
+        list: true
+      - name: intro_en
+        label: "Short intro beside the work (English)"
+        type: text
+      - name: intro_zh
+        label: "作品区左侧短简介（中文）"
+        type: text
+      - name: about_en
+        label: "About (English)"
+        type: text
+        description: "Leave an empty line between paragraphs."
+      - name: about_zh
+        label: "关于（中文）"
+        type: text
+        description: "段落之间空一行。"
+      - name: location_en
+        label: "Location label (English, optional)"
+        type: string
+      - name: location_zh
+        label: "所在地（中文，可选）"
+        type: string
+      - name: timezone
+        label: "Time zone for the clock / 时钟时区"
+        type: string
+        description: "e.g. America/New_York, Asia/Shanghai"
+      - name: email
+        label: "Email / 邮箱"
+        type: string
+      - name: links
+        label: "Links / 社交链接"
+        type: object
+        list: true
+        fields:
+          - name: label
+            label: "Name (English)"
+            type: string
+          - name: label_zh
+            label: "名称（中文）"
+            type: string
+          - name: url
+            label: "Link / 链接"
+            type: string
+      - name: cv
+        label: "Activity list / 经历"
+        type: object
+        list: true
+        fields:
+          - name: year
+            label: "Year / 年份"
+            type: string
+          - name: text_en
+            label: "English"
+            type: string
+          - name: text_zh
+            label: "中文"
+            type: string
