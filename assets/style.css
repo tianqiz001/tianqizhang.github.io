@@ -137,7 +137,7 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
   height: clamp(84px, 11vw, 170px);
   width: auto;
   max-width: 100%;
-  margin-left: 0;
+  margin-left: clamp(0px, 18vw, 280px);   /* the far-right spot the user picked; research areas follow on its right */
   filter: drop-shadow(0 0 14px rgba(65, 226, 200, .25));
 }
 .tagline {
@@ -504,7 +504,8 @@ html[lang^="zh"] .modal-cap h3 { font-family: "Noto Sans SC", var(--display); fo
   .cv { grid-column: auto; }
   .work-head-tools { justify-items: start; }
   .filters { justify-content: flex-start; }
-  .sig-row .cn-name { order: -1; flex-basis: 100%; }
+  .sig-row .cn-name { flex-basis: 100%; }
+  .cn-sig { margin-left: 0; }
   .nav { display: none; }
   .player-inner { grid-template-columns: auto minmax(0, 1fr) auto; }
   .p-scope { display: none; }
