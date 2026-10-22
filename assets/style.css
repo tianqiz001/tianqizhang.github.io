@@ -137,7 +137,7 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
   height: clamp(84px, 11vw, 170px);
   width: auto;
   max-width: 100%;
-  margin-left: clamp(8px, 4.6vw, 80px);
+  margin-left: 0;
   filter: drop-shadow(0 0 14px rgba(65, 226, 200, .25));
 }
 .tagline {
@@ -145,7 +145,8 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
   font-size: clamp(19px, 2.1vw, 28px); line-height: 1.3;
   text-wrap: balance; color: var(--paper);
 }
-.roles { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: right; }
+.sig-row { display: flex; align-items: center; gap: clamp(20px, 3.4vw, 56px); flex-wrap: wrap; }
+.roles { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: left; }
 .roles li {
   font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
   color: var(--mist);
@@ -503,7 +504,7 @@ html[lang^="zh"] .modal-cap h3 { font-family: "Noto Sans SC", var(--display); fo
   .cv { grid-column: auto; }
   .work-head-tools { justify-items: start; }
   .filters { justify-content: flex-start; }
-  .roles { text-align: left; }
+  .sig-row .cn-name { order: -1; flex-basis: 100%; }
   .nav { display: none; }
   .player-inner { grid-template-columns: auto minmax(0, 1fr) auto; }
   .p-scope { display: none; }
