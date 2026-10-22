@@ -6,19 +6,19 @@
   "tagline_en": "Composer working between the concert hall, the screen and the circuit board.",
   "tagline_zh": "游走于音乐厅、银幕与电路板之间的作曲家。",
   "roles_en": [
-    "Computer music",
-    "Scoring for visual media",
-    "Live Performing"
+    "Computer Music",
+    "Scoring for Visual Media",
+    "Live Electronic Performance"
   ],
   "roles_zh": [
     "计算机音乐",
     "影视与媒体配乐",
-    "现场演出"
+    "现场电子音乐表演"
   ],
   "intro_en": "I write music for film and game, make electronic and computer music, pop songs, and build my own instruments from sensors and microcontrollers.",
   "intro_zh": "我为电影和游戏创作配乐，制作电子与计算机音乐、流行歌曲，也用传感器和微控制器搭建自己的乐器。",
-  "about_en": "I'm Tianqi Zhang, a composer studying computer music and scoring for visual media.\n\n",
-  "about_zh": "我是张天琪（Mercu），一名学习计算机音乐与影视媒体配乐的作曲者。\n\n我的创作在三个方向之间往返：为画面写作，让音乐一帧一帧地服务于故事；电子与计算机音乐，把声音本身当作材料；以及乐器制作，用 Arduino 和传感器设计自己的控制器，让手势、光线和触摸都成为乐谱的一部分。\n\n请在后台把这段文字换成你自己的简介。第一段尽量简短，它会以较大的字号显示。",
+  "about_en": "I am Tianqi Zhang, a Chinese composer and electronic musician currently based in Bloomington. I am pursuing a double major in Screen Scoring and Computer Music at Indiana University. Deeply fascinated by future technologies and existential philosophy, I explore the tension between human intention and technological autonomy through my work. My music focuses on timbre, texture, and transformation, combining detailed electronic sound design with gestural interaction, emergent processes, and speculative storytelling. Through shifting layers of resonance, noise, spectral movement, and transient detail, I create immersive sonic worlds that move fluidly between order and instability, intimacy and vastness.",
+  "about_zh": "我是张天琪，中国作曲家与电子音乐人，目前在印第安纳大学攻读影视配乐与计算机音乐双专业。我对未来科技与存在主义哲学抱有浓厚兴趣，并通过创作探索人类意图与技术自主性之间的张力。我的音乐以音色、织体与声音形态的转化为核心，将细致的电子声音设计与手势交互、涌现过程和推想性叙事相结合。通过不断变化的共振、噪声、频谱运动与瞬态细节构建出游走于秩序与不稳定、亲密与浩瀚之间的沉浸式声音世界。",
   "location_en": "Beijing/Bloomington Indiana",
   "location_zh": "beijin",
   "timezone": "America/Indiana/Indianapolis",
