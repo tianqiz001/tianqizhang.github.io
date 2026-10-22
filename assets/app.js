@@ -460,7 +460,6 @@
     const cat = (CATS[w.category] && CATS[w.category][lang]) || '';
     ctx.font = `${Math.round(W / 46)}px "Martian Mono", "Noto Sans SC", monospace`;
     ctx.fillStyle = pal.text;
-    ctx.fillText(`FIG. ${figNo}`, W * 0.04, H * 0.09);
     const cw = ctx.measureText(cat.toUpperCase()).width;
     ctx.fillText(cat.toUpperCase(), W * 0.96 - cw, H * 0.09);
   }
@@ -531,7 +530,6 @@
       <article class="win${w.featured ? ' featured' : ''}${playingId === w._id ? ' playing' : ''}${playingId === w._id && audio.paused ? ' paused' : ''}" data-id="${w._id}" style="--i:${idx};--u:${units};--U:${rowUnits}">
         <div class="win-bar">
           <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span class="win-fig">FIG. ${fig}</span>
           <span class="win-file">${esc(file)}</span>
         </div>
         <${viewTag} class="win-view" ${hasAction ? `aria-label="${esc(t('type.' + typeKey))}: ${esc(title)}"` : ''}>
@@ -579,7 +577,7 @@
     if (w) openWork(w);
   });
 
-  function figOf(w) { return `FIG. ${figMap.get(w._id) || '--'}`; }
+  function figOf(w) { return (CATS[w.category] && CATS[w.category][lang]) || ''; }
 
   function openWork(w) {
     const kind = kindOf(w);
@@ -606,7 +604,7 @@
   function updatePlayerText() {
     const w = works.find((x) => x._id === playingId);
     if (!w) return;
-    $('#pFig').textContent = `${figOf(w)} · ${(CATS[w.category] && CATS[w.category][lang]) || ''}`;
+    $('#pFig').textContent = figOf(w);
     $('#pTitle').textContent = f(w, 'title');
     $('#pClose').setAttribute('aria-label', t('player.close'));
     $('#pToggle').setAttribute('aria-label', t(audio.paused ? 'player.play' : 'player.pause'));
@@ -738,7 +736,7 @@
       $('#portraitFile').textContent = basename(site.photo);
     } else {
       frame.classList.remove('has-photo');
-      frame.innerHTML = `<div class="portrait-empty"><div><p class="label">FIG. A · PORTRAIT</p><p>${esc(t('photo.empty'))}</p></div></div>`;
+      frame.innerHTML = `<div class="portrait-empty"><div><p>${esc(t('photo.empty'))}</p></div></div>`;
       $('#portraitFile').textContent = 'portrait.jpg';
     }
     $('#portraitCap').textContent = cn ? `${fullName} · ${cn}` : fullName;
