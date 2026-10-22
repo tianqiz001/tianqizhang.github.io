@@ -146,7 +146,8 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
   text-wrap: balance; color: var(--paper);
 }
 .sig-row { display: flex; align-items: center; gap: 14px clamp(10px, 1.4vw, 24px); flex-wrap: wrap; }
-.roles { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; text-align: left; }
+.roles { list-style: none; margin: 0; padding: 0; display: grid; gap: 15px; text-align: left; }
+.sig-row .roles { margin-left: -15px; }
 .roles li {
   font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
   color: var(--mist);
@@ -505,6 +506,7 @@ html[lang^="zh"] .modal-cap h3 { font-family: "Noto Sans SC", var(--display); fo
   .work-head-tools { justify-items: start; }
   .filters { justify-content: flex-start; }
   .sig-row .cn-name { flex-basis: 100%; }
+  .sig-row .roles { margin-left: 0; }
   .cn-sig { margin-left: 0; }
   .nav { display: none; }
   .player-inner { grid-template-columns: auto minmax(0, 1fr) auto; }
