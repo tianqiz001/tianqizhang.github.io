@@ -137,7 +137,7 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
   height: clamp(84px, 11vw, 170px);
   width: auto;
   max-width: 100%;
-  margin-left: clamp(28px, 9vw, 150px);
+  margin-left: clamp(22px, 7vw, 116px);
   filter: drop-shadow(0 0 14px rgba(65, 226, 200, .25));
 }
 .tagline {
