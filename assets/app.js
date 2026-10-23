@@ -897,7 +897,7 @@
     const timers = new Map();
     row.addEventListener('pointerover', (e) => { overPet = !!e.target.closest('.pet'); });
     row.addEventListener('pointerleave', () => { overPet = false; });
-    const sync = () => lane.classList.toggle('paused', reduceMotion || !!row.querySelector('.pet.facing'));
+    const sync = () => lane.classList.toggle('paused', reduceMotion);   // only the pet you point at turns; the rest keep walking
     const face = (pet, on, hold) => {
       clearTimeout(timers.get(pet));
       pet.classList.toggle('facing', on);
