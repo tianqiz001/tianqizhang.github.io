@@ -5,7 +5,7 @@
       "title_zh": "Kai",
       "category": "electronic",
       "year": "2025",
-      "media_type": "embed",
+      "media_type": "video",
       "audio": "media/Kai_Stereo.mp3",
       "embed_url": "https://youtu.be/2KzO18cmwmU?si=swZWV-2AZqFlpFV2",
       "cover": "media/c84da326-2ffb-4448-831a-cb1b704846c5.png",
@@ -14,7 +14,8 @@
       "description_en": "Kai is an audiovisual work for eight-channel spatial audio and real-time visuals, created in Kyma and performed through a Wacom tablet as a gestural interface. Grounded in existentialism and absurdism, the work explores memory, identity, and persistence, considering memory not simply as a record of the past but as a process through which personal identity and meaning are continuously reconstructed. Within an uncertain and indifferent world, memory becomes an anchor—unstable and subjective, yet essential to the persistence of the self.\n\nThe work is situated within a speculative narrative surrounding Kai, an eighteen-year-old astronaut who leaves Earth aboard an ark-ship carrying the genetic archive of human civilization. As she travels further into an unknown and increasingly isolated universe, memories of her hometown become one of the few remaining connections between her present existence and her former identity. Rather than functioning solely as narrative material, this fictional framework provides a conceptual structure through which the work examines memory, displacement, and the construction of meaning.\n\nKyma constructs and spatializes the electronic sound environment, while the Wacom tablet provides continuous gestural control over its transformation during performance. The gestural interface shapes the real-time particle-based visual environment, allowing sound and image to evolve together in response to the performer’s actions.\n\nThe sonic materials evoke an imagined reconstruction of Kai’s hometown: the vast snowfields of Yakeshi, movement through its landscape, and the warmth of a familiar tavern containing the people and experiences she once knew. Across the eight-channel space, these materials form an immersive and continuously transforming environment in which fragments of memory can emerge, shift, disperse, and return.",
       "description_zh": "本作品以存在主义与荒谬主义为立论根基，深入探讨了在无限宇宙之中关于记忆、身份认同与坚守的议题。人类的存在本质上与记忆交织在一起；我们常渴望逃离过去，但记忆即便稍纵即逝、甚至充满欺骗性，却依然几乎无法抹去。\nKai是一名年仅18岁的宇航员，正与她的团队一同驶向无尽长夜。她肩负着延续地球文明的希望。3i-Atlas的出现，证实了外星生命的临近。为了应对这一未知文明，世界领袖们默默发射了一艘搭载着地球基因种子库的方舟舰，由四位来自不同背景的宇航员共同护航。\n在这个被孤独与沉寂所定义的宇宙中，正是那些定义了主角 Kai的记忆，将她与这段旅程紧紧羁绊在一起。我们被迫背负着来时路上的沉重回忆，去航向余生。然而，只要这些记忆永存，我们就可以面对未知宇宙那无边无际的荒谬。\n这部作品是对Kai家乡环境的声音设计，使用Kyma和Wacom进行创作及表演。视频中的背景为粒子模拟器，由四种不同的手势控制，全方位模拟了Kai的记忆锚点。行走在小镇牙克石的无尽雪原，奔向一个温暖幸福的小酒馆，那里有她熟知以及热爱的一切……",
       "featured": true,
-      "hidden": false
+      "hidden": false,
+      "video": "media/Kai.mp4"
     },
     {
       "title_en": "Take it Eazin",
