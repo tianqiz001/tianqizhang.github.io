@@ -934,10 +934,69 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (actWheel) { actMeasure(); actKick(); } });
   }
 
+  /* ───────── statement: scroll-driven, word-by-word reading ───────── */
+  const stSec = $('#statement');
+  const stText = $('#statementText');
+  let stWords = [];
+  function stSplit(text, l) {
+    if (l === 'zh') {
+      let parts;
+      if (window.Intl && Intl.Segmenter) {
+        parts = [...new Intl.Segmenter('zh', { granularity: 'word' }).segment(text)].map((x) => ({ t: x.segment, w: x.isWordLike }));
+      } else {
+        parts = [...text].map((ch) => ({ t: ch, w: /[\p{L}\p{N}]/u.test(ch) }));
+      }
+      const out = [];
+      for (const p of parts) {
+        if (!p.t.trim()) continue;
+        if (!p.w && out.length) out[out.length - 1] += p.t;   // punctuation rides with the word before it
+        else out.push(p.t);
+      }
+      return out;
+    }
+    return text.split(/\s+/).filter(Boolean);
+  }
+  function statement() {
+    if (!stText) return;
+    const text = f(site, 'tagline').trim();
+    stSec.hidden = !text;
+    const words = stSplit(text, lang);
+    const sep = lang === 'zh' ? '' : ' ';
+    stText.innerHTML = words.map((w) => `<span class="w">${esc(w)}</span>`).join(sep);
+    stText.setAttribute('aria-label', text);
+    stWords = $$('.w', stText);
+    stWords.forEach((el) => { el.setAttribute('aria-hidden', 'true'); el._a = -1; });
+    // scroll length grows with the paragraph so each word gets a similar amount of scrolling
+    stSec.style.setProperty('--st-len', `${Math.round(Math.min(320, Math.max(150, words.length * 8)))}vh`);
+    stUpdate();
+  }
+  function stUpdate() {
+    if (!stWords.length) return;
+    const r = stSec.getBoundingClientRect();
+    const travel = r.height - innerHeight;
+    const p = travel > 0 ? Math.min(1, Math.max(0, -r.top / travel)) : 1;
+    // a short pause before the first word and after the last, so the start and end both read clearly
+    const x = ((p - 0.06) / 0.82) * stWords.length;
+    for (let i = 0; i < stWords.length; i++) {
+      const el = stWords[i];
+      const a = Math.round(Math.min(1, Math.max(0, x - i)) * 40) / 40;
+      if (a !== el._a) {
+        el._a = a;
+        el.style.setProperty('--a', a);
+        el.classList.toggle('on', a >= 0.5);
+      }
+    }
+  }
+  let stRaf = 0;
+  const stKick = () => { if (!stRaf) stRaf = requestAnimationFrame(() => { stRaf = 0; stUpdate(); }); };
+  addEventListener('scroll', stKick, { passive: true });
+  addEventListener('resize', stKick);
+
   /* ───────── site text, about, contact ───────── */
   function renderSite() {
     $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
     $$('[data-site]').forEach((el) => { el.textContent = f(site, el.dataset.site); });
+    statement();
     $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
 
     const roles = site[`roles_${lang}`] || site.roles_en || [];
