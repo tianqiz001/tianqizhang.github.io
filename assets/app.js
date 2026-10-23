@@ -7,6 +7,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let overPet = false;   // pointer is on one of the pets under the name
   const TAU = Math.PI * 2;
 
   /* ───────── interface text (EN / 中文) ───────── */
@@ -354,6 +355,7 @@
       const x = ptr.x * d, y = ptr.y * d;
       heroCtx.strokeStyle = 'rgba(65,226,200,.28)'; heroCtx.lineWidth = d;
       heroCtx.beginPath(); heroCtx.moveTo(x, 0); heroCtx.lineTo(x, H); heroCtx.moveTo(0, y); heroCtx.lineTo(W, y); heroCtx.stroke();
+      if (overPet) { return; }   // the pet's own name tag is showing there
       heroCtx.font = `${10 * d}px "Martian Mono", monospace`;
       heroCtx.fillStyle = 'rgba(65,226,200,.9)';
       const txt = soundOn && theremin
@@ -878,17 +880,42 @@
     const lane = $('#pets');
     if (!lane) return;
     const row = lane.querySelector('.pets-row');
-    // the pets walk on the spot; the meadow, forest and hills scroll past at different depths
+    const ref = lane.querySelector('.pet-ubai .pet-body');   // 1 "lane" = Ubai's height
+    // the pets walk on the spot; the meadow, forest and hills scroll past at different depths.
+    // 0.55 lanes/s must match K in tools/pets_build.py, so paws on the ground move exactly with the grass.
+    const SPEED = 0.55;
     const layers = [['.far', 600 / 100, 0.12], ['.mid', 420 / 100, 0.32], ['.near', 260 / 100, 1]]
       .map(([sel, ratio, depth]) => ({ el: lane.querySelector(sel), ratio, depth, x: 0 }))
       .filter((l) => l.el);
-    if (reduceMotion) { lane.classList.add('paused'); return; }
-    let last = 0, paused = false;
+
+    // click / tap / Enter: that pet turns to face you for a few seconds; everyone waits
+    const timers = new Map();
+    row.addEventListener('pointerover', (e) => { overPet = !!e.target.closest('.pet'); });
+    row.addEventListener('pointerleave', () => { overPet = false; });
+    const sync = () => lane.classList.toggle('paused', reduceMotion || !!row.querySelector('.pet.facing'));
+    const face = (pet, on) => {
+      clearTimeout(timers.get(pet));
+      pet.classList.toggle('facing', on);
+      pet.setAttribute('aria-pressed', String(on));
+      if (on) timers.set(pet, setTimeout(() => face(pet, false), 3200));
+      sync();
+    };
+    $$('.pet', row).forEach((pet) => {
+      pet.setAttribute('aria-pressed', 'false');
+      pet.addEventListener('click', () => face(pet, !pet.classList.contains('facing')));
+      pet.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); face(pet, !pet.classList.contains('facing')); }
+      });
+    });
+    sync();
+    if (reduceMotion) return;
+
+    let last = 0;
     const tick = (t) => {
       const dt = last ? Math.min(0.05, (t - last) / 1000) : 0;
       last = t;
-      if (!paused) {
-        const speed = lane.clientHeight * 0.55;   // px/s at the front layer, matched to the leg cycle
+      if (!lane.classList.contains('paused')) {
+        const speed = (ref ? ref.clientHeight : lane.clientHeight / 1.7) * SPEED;
         layers.forEach((l) => {
           const tile = l.el.clientHeight * l.ratio;
           if (!tile) return;
@@ -898,11 +925,6 @@
       }
       requestAnimationFrame(tick);
     };
-    const pause = (on) => { paused = on; lane.classList.toggle('paused', on); };
-    row.addEventListener('pointerenter', () => pause(true));
-    row.addEventListener('pointerleave', () => pause(false));
-    row.addEventListener('focusin', () => pause(true));
-    row.addEventListener('focusout', () => pause(false));
     requestAnimationFrame(tick);
   })();
 
