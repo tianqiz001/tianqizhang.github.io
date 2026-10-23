@@ -764,6 +764,39 @@
   setInterval(tick, 15000);
   $('#year').textContent = new Date().getFullYear();
 
+  /* ───────── pets walking under the name ───────── */
+  function petNames() {
+    $$('.pet').forEach((el) => {
+      const tag = el.querySelector('.pet-tag');
+      if (tag) tag.textContent = (lang === 'zh' ? el.dataset.zh : el.dataset.en) || '';
+    });
+  }
+  (function pets() {
+    const lane = $('#pets');
+    if (!lane) return;
+    const row = lane.querySelector('.pets-row');
+    if (reduceMotion) { row.style.transform = 'translateX(12px)'; lane.classList.add('paused'); return; }
+    let x = null, last = 0, paused = false;
+    const tick = (t) => {
+      const dt = last ? Math.min(0.05, (t - last) / 1000) : 0;
+      last = t;
+      const w = lane.clientWidth, rw = row.offsetWidth;
+      if (x === null) x = -rw * 0.35;
+      if (!paused) {
+        x += Math.max(28, w / 20) * dt;
+        if (x > w) x = -rw;
+        row.style.transform = `translateX(${x.toFixed(1)}px)`;
+      }
+      requestAnimationFrame(tick);
+    };
+    const pause = (on) => { paused = on; lane.classList.toggle('paused', on); };
+    row.addEventListener('pointerenter', () => pause(true));
+    row.addEventListener('pointerleave', () => pause(false));
+    row.addEventListener('focusin', () => pause(true));
+    row.addEventListener('focusout', () => pause(false));
+    requestAnimationFrame(tick);
+  })();
+
   /* ───────── language ───────── */
   function setLang(l) {
     lang = l;
@@ -773,6 +806,7 @@
     renderSite(); renderFilters(); renderWorks();
     if (playingId) updatePlayerText();
     fillModalText();
+    petNames();
   }
   $$('.lang button').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
 
