@@ -997,11 +997,13 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (actWheel) { actMeasure(); actKick(); } });
   }
 
-  /* ───────── statement: scroll-driven, word-by-word reading ───────── */
-  const stSec = $('#statement');
-  const stText = $('#statementText');
-  let stWords = [];
-  function stSplit(text, l) {
+  /* ───────── tagline: word-by-word lighting (scroll + hover) ─────────
+     Scrolling the hero away lights the words in reading order (reverse when scrolling back).
+     With a mouse, hovering a word lights that word and every word before it. */
+  const tgEl = $('#tagline');
+  let tgWords = [];
+  let tgHover = -1;
+  function tgSplit(text, l) {
     if (l === 'zh') {
       let parts;
       if (window.Intl && Intl.Segmenter) {
@@ -1019,47 +1021,58 @@
     }
     return text.split(/\s+/).filter(Boolean);
   }
-  function statement() {
-    if (!stText) return;
+  function tagline() {
+    if (!tgEl) return;
     const text = f(site, 'tagline').trim();
-    stSec.hidden = !text;
-    const words = stSplit(text, lang);
-    const sep = lang === 'zh' ? '' : ' ';
-    stText.innerHTML = words.map((w) => `<span class="w">${esc(w)}</span>`).join(sep);
-    stText.setAttribute('aria-label', text);
-    stWords = $$('.w', stText);
-    stWords.forEach((el) => { el.setAttribute('aria-hidden', 'true'); el._a = -1; });
-    // scroll length grows with the paragraph so each word gets a similar amount of scrolling
-    stSec.style.setProperty('--st-len', `${Math.round(Math.min(320, Math.max(150, words.length * 8)))}vh`);
-    stUpdate();
+    const words = tgSplit(text, lang);
+    tgEl.innerHTML = words.map((w, i) => `<span class="w" data-i="${i}">${esc(w)}</span>`).join(lang === 'zh' ? '' : ' ');
+    tgEl.setAttribute('aria-label', text);
+    tgWords = $$('.w', tgEl);
+    tgWords.forEach((el) => { el.setAttribute('aria-hidden', 'true'); el._a = -1; });
+    tgHover = -1;
+    tgUpdate();
   }
-  function stUpdate() {
-    if (!stWords.length) return;
-    const r = stSec.getBoundingClientRect();
-    const travel = r.height - innerHeight;
-    const p = travel > 0 ? Math.min(1, Math.max(0, -r.top / travel)) : 1;
-    // a short pause before the first word and after the last, so the start and end both read clearly
-    const x = ((p - 0.06) / 0.82) * stWords.length;
-    for (let i = 0; i < stWords.length; i++) {
-      const el = stWords[i];
-      const a = Math.round(Math.min(1, Math.max(0, x - i)) * 40) / 40;
+  function tgUpdate() {
+    if (!tgWords.length) return;
+    // scroll progress: 0 at the top of the page, 1 when the tagline has risen to ~22% of the viewport
+    const r = tgEl.getBoundingClientRect();
+    const docBottom = r.bottom + scrollY;
+    const end = Math.max(60, docBottom - innerHeight * 0.22);
+    const p = Math.min(1, Math.max(0, scrollY / end));
+    const x = p * (tgWords.length + 0.6);
+    for (let i = 0; i < tgWords.length; i++) {
+      const el = tgWords[i];
+      let a = Math.min(1, Math.max(0, x - i));
+      if (tgHover >= 0 && i <= tgHover) a = 1;
+      a = Math.round(a * 40) / 40;
       if (a !== el._a) {
         el._a = a;
+        // hover lights up in a quick ripple toward the hovered word; scroll follows the scroll directly
+        el.style.transitionDelay = tgHover >= 0 && i <= tgHover ? `${Math.min(i, 40) * 14}ms` : '0ms';
         el.style.setProperty('--a', a);
         el.classList.toggle('on', a >= 0.5);
       }
     }
   }
-  let stRaf = 0;
-  const stKick = () => { if (!stRaf) stRaf = requestAnimationFrame(() => { stRaf = 0; stUpdate(); }); };
-  addEventListener('scroll', stKick, { passive: true });
-  addEventListener('resize', stKick);
+  let tgRaf = 0;
+  const tgKick = () => { if (!tgRaf) tgRaf = requestAnimationFrame(() => { tgRaf = 0; tgUpdate(); }); };
+  addEventListener('scroll', tgKick, { passive: true });
+  addEventListener('resize', tgKick);
+  if (tgEl && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    tgEl.addEventListener('pointerover', (e) => {
+      const w = e.target.closest && e.target.closest('.w');
+      if (!w) return;
+      const i = +w.dataset.i;
+      if (i !== tgHover) { tgHover = i; tgUpdate(); }
+    });
+    tgEl.addEventListener('pointerleave', () => { tgHover = -1; tgUpdate(); });
+  }
 
   /* ───────── site text, about, contact ───────── */
   function renderSite() {
     $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
     $$('[data-site]').forEach((el) => { el.textContent = f(site, el.dataset.site); });
-    statement();
+    tagline();
     $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
 
     const roles = site[`roles_${lang}`] || site.roles_en || [];

@@ -129,12 +129,12 @@ content:
         type: image
         description: "A portrait, ideally vertical (4:5). 竖版照片效果最好（4:5）。"
       - name: tagline_en
-        label: "Statement (English)"
-        description: "Shown large in its own section below the name; words light up one by one as visitors scroll."
+        label: "Tagline (English)"
+        description: "Shown under the signature. Words light up one by one as visitors scroll or hover."
         type: text
       - name: tagline_zh
-        label: "大段文字（中文）"
-        description: "显示在名字下方的独立区域，访客往下滚动时逐词点亮。"
+        label: "一句话介绍（中文）"
+        description: "显示在签名下方，访客滚动或鼠标悬停时逐词点亮。"
         type: text
       - name: roles_en
         label: "Main research areas (English)"
