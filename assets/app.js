@@ -737,52 +737,51 @@
     items.forEach((li) => cvIO.observe(li));
   }
 
-  /* ───────── activity list: photo that follows the cursor ───────── */
-  let cvFloat = null;
+  /* ───────── activity list: hovering a line swaps the About background (honest.fi style) ───────── */
   function cvHover() {
     const list = $('#cvList');
+    const section = $('#about');
+    let bg = $('.about-bg', section);
+    if (!bg) {
+      bg = document.createElement('div');
+      bg.className = 'about-bg'; bg.setAttribute('aria-hidden', 'true');
+      section.prepend(bg);
+    }
+    // one layer per photo, so switching lines crossfades instead of reloading
+    const want = [...new Set($$('li.has-img', list).map((li) => li.dataset.img))];
+    $$('img', bg).forEach((im) => { if (!want.includes(im.dataset.src)) im.remove(); });
+    want.forEach((src) => {
+      if ($$('img', bg).some((im) => im.dataset.src === src)) return;
+      const im = new Image(); im.alt = ''; im.decoding = 'async'; im.loading = 'lazy';
+      im.dataset.src = src; im.src = src; bg.appendChild(im);
+    });
     if (list.dataset.hoverBound) return;
     list.dataset.hoverBound = '1';
     const fine = matchMedia('(hover: hover) and (pointer: fine)');
-    cvFloat = document.createElement('figure');
-    cvFloat.className = 'cv-float'; cvFloat.setAttribute('aria-hidden', 'true');
-    cvFloat.innerHTML = '<img alt="">';
-    document.body.appendChild(cvFloat);
-    const img = $('img', cvFloat);
-    let x = 0, y = 0, tx = 0, ty = 0, raf = 0, cur = null;
-    const loop = () => {
-      const dx = tx - x;
-      x += dx * 0.16; y += (ty - y) * 0.16;
-      const rot = Math.max(-8, Math.min(8, dx * 0.06));
-      const w = cvFloat.offsetWidth, h = cvFloat.offsetHeight || w * 0.66;
-      // sit beside the cursor on whichever side has room, and stay inside the screen
-      let px = x > innerWidth / 2 ? x - w - 28 : x + 28;
-      px = Math.max(12, Math.min(innerWidth - w - 12, px));
-      const py = Math.max(12, Math.min(innerHeight - h - 12, y - h / 2));
-      cvFloat.style.transform = `translate3d(${px}px, ${py}px, 0) rotate(${rot}deg)`;
-      raf = (Math.abs(tx - x) > 0.3 || Math.abs(ty - y) > 0.3 || cur) ? requestAnimationFrame(loop) : 0;
-    };
-    const show = (li, e) => {
+    let cur = null, offT = 0;
+    const show = (li) => {
+      clearTimeout(offT);
       if (cur === li) return;
-      cur = li;
-      const src = li.dataset.img;
-      if (img.getAttribute('src') !== src) {
-        cvFloat.classList.remove('on');
-        img.src = src;
-      }
-      if (!cvFloat.classList.contains('on')) { x = e.clientX; y = e.clientY; }
-      requestAnimationFrame(() => cvFloat.classList.add('on'));
+      if (cur) cur.classList.remove('cur');
+      cur = li; li.classList.add('cur');
+      $$('img', bg).forEach((im) => im.classList.toggle('on', im.dataset.src === li.dataset.img));
+      section.classList.add('bg-on');
     };
-    const hide = () => { cur = null; cvFloat.classList.remove('on'); };
-    list.addEventListener('pointermove', (e) => {
+    const hide = (delay = 140) => {
+      clearTimeout(offT);
+      offT = setTimeout(() => {
+        if (cur) cur.classList.remove('cur');
+        cur = null;
+        section.classList.remove('bg-on');
+        $$('img', bg).forEach((im) => im.classList.remove('on'));
+      }, delay);
+    };
+    list.addEventListener('pointerover', (e) => {
       if (!fine.matches || e.pointerType !== 'mouse') return;
-      tx = e.clientX; ty = e.clientY;
-      const li = e.target.closest('li.has-img');
-      if (li) show(li, e); else if (cur) hide();
-      if (!raf) raf = requestAnimationFrame(loop);
+      const li = e.target.closest('li');
+      if (li && li.classList.contains('has-img')) show(li); else hide();
     });
-    list.addEventListener('pointerleave', hide);
-    window.addEventListener('scroll', () => { if (cur) hide(); }, { passive: true });
+    list.addEventListener('pointerleave', () => hide());
     // touch / keyboard: open the photo inline under the line
     const toggle = (li) => {
       const open = !li.classList.contains('open');
@@ -797,6 +796,11 @@
       const li = e.target.closest('li.has-img');
       if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(li); }
     });
+    list.addEventListener('focusin', (e) => {
+      const li = e.target.closest('li.has-img');
+      if (li && fine.matches) show(li);
+    });
+    list.addEventListener('focusout', () => hide());
   }
 
   /* ───────── site text, about, contact ───────── */

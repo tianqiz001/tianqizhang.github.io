@@ -480,18 +480,35 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
 }
 .cv-list li.in::after { transform: scaleX(1); }
 .cv-list li.in .m > span { transform: none; opacity: 1; }
-/* hover photo: floating card that follows the cursor (desktop) */
-.cv-float {
-  position: fixed; left: 0; top: 0; z-index: 60; margin: 0; pointer-events: none;
-  width: clamp(240px, 24vw, 380px);
+/* hover photo → full-bleed background of the About section (honest.fi style) */
+.about { position: relative; isolation: isolate; transition: color .9s cubic-bezier(.22,1,.36,1); }
+.about-bg {
+  position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background: var(--abyss); opacity: 0; transition: opacity 1s cubic-bezier(.22,1,.36,1);
 }
-.cv-float img {
-  display: block; width: 100%; height: auto; max-height: 60vh; object-fit: cover;
-  border-radius: 4px; box-shadow: 0 24px 48px -16px rgba(5, 38, 40, .45);
-  clip-path: inset(50% 0 50% 0); opacity: 0; scale: 1.08;
-  transition: clip-path .5s cubic-bezier(.65,0,.2,1), opacity .25s, scale .7s cubic-bezier(.2,.8,.2,1);
+.about-bg img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; scale: 1.06;
+  transition: opacity 1.6s cubic-bezier(.22,1,.36,1), scale 6s cubic-bezier(.22,1,.36,1);
 }
-.cv-float.on img { clip-path: inset(0 0 0 0); opacity: 1; scale: 1; }
+.about-bg img.on { opacity: .4; scale: 1; }
+.about-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(5,38,40,0) 45%, rgba(5,38,40,.35) 75%, rgba(5,38,40,.75) 100%);
+}
+.about.bg-on .about-bg { opacity: 1; }
+.about.bg-on { color: var(--paper); border-top-color: transparent; }
+.about-side, .about-text, .cv .label { transition: opacity .9s cubic-bezier(.22,1,.36,1), color .9s; }
+.about.bg-on .about-side, .about.bg-on .about-text { opacity: 0 !important; }
+.about.bg-on .cv .label { color: var(--mist); }
+.cv-list li > .m, .cv-list li > .cv-inline { transition: opacity .35s; }
+.about.bg-on .cv-list li > .m { opacity: .3; }
+.about.bg-on .cv-list li.cur > .m { opacity: 1; }
+.about.bg-on .cv-list::before, .about.bg-on .cv-list li::after { background-color: var(--rule-dark); }
+.about.bg-on .cv-list li::before { transform: scaleX(0); }
+.about.bg-on .cv-list .yr { color: var(--glow); }
+.about.bg-on .cv-cam { border-color: var(--glow); }
+.about.bg-on .cv-list li.cur .cv-cam { background: var(--glow); }
 .cv-list li.has-img { cursor: pointer; }
 .cv-list li.has-img:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 .cv-cam {
