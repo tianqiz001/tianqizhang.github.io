@@ -184,7 +184,7 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
 
 /* ───────── PETS: the animals walking along the hero-foot line ───────── */
 .pets {
-  --lane: clamp(54px, 5.4vw, 84px);
+  --lane: clamp(60px, 6.4vw, 104px);
   position: relative;
   width: clamp(340px, 46%, 700px);
   height: calc(var(--lane) * 1.55 + 18px);
@@ -206,24 +206,26 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
 .pets-row {
   position: absolute; left: clamp(28px, 9%, 72px);
   bottom: calc(var(--lane) * .62 * .1);  /* feet on the grass line */
-  display: flex; align-items: flex-end; gap: calc(var(--lane) * .16);
+  display: flex; align-items: flex-end; gap: calc(var(--lane) * .1);
 }
 .pet { position: relative; display: block; line-height: 0; outline: none; cursor: default; }
-.pet svg { display: block; width: auto; overflow: visible; filter: drop-shadow(0 2px 1px rgba(0,0,0,.25)); }
-.pet-qilin svg      { height: calc(var(--lane) * .6); }
-.pet-xiaoxiong svg  { height: calc(var(--lane) * .62); }
-.pet-sunny svg      { height: calc(var(--lane) * .5); }
-.pet-ubai svg       { height: var(--lane); }
-.pet .leg  { transform-box: fill-box; transform-origin: 50% 12%; animation: pet-step .34s ease-in-out infinite alternate; }
-.pet .leg.b { animation-delay: -.34s; }
-.pet .bd   { animation: pet-bob .17s ease-in-out infinite alternate; }
-.pet .tail { transform-box: view-box; animation: pet-wag .5s ease-in-out infinite alternate; }
-.pet-ubai .leg { animation-duration: .4s; } .pet-ubai .leg.b { animation-delay: -.4s; }
-.pet-sunny .leg { animation-duration: .28s; } .pet-sunny .leg.b { animation-delay: -.28s; }
-@keyframes pet-step { from { transform: rotate(17deg); } to { transform: rotate(-17deg); } }
-@keyframes pet-bob  { from { transform: translateY(0); } to { transform: translateY(-1.6px); } }
-@keyframes pet-wag  { from { transform: rotate(-8deg); } to { transform: rotate(10deg); } }
-.pets.paused .leg, .pets.paused .bd { animation-play-state: paused; }
+/* each pet = the body image plus four leg layers cut from the user's own illustrations;
+   legs swing about the hip/shoulder (transform-origin set per layer), diagonal pairs in step */
+.pet-fig { position: relative; display: block; animation: pet-bob calc(var(--t) / 2) ease-in-out infinite alternate; }
+.pet-fig img { display: block; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.pet-fig .pet-body { height: calc(var(--lane) * var(--s)); width: auto; filter: drop-shadow(0 2px 2px rgba(0,0,0,.28)); }
+.pet-fig .leg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  animation: pet-swing var(--t) ease-in-out infinite alternate;
+}
+.pet-fig .leg.b { animation-delay: calc(var(--t) * -1); }
+.pet-kylin { --s: .6;  --t: .44s; --a: 11deg; }
+.pet-bear  { --s: .72; --t: .42s; --a: 12deg; }
+.pet-sunny { --s: .62; --t: .36s; --a: 13deg; }
+.pet-ubai  { --s: 1;   --t: .52s; --a: 12deg; }
+@keyframes pet-swing { from { transform: rotate(var(--a)); } to { transform: rotate(calc(var(--a) * -1)); } }
+@keyframes pet-bob   { from { transform: translateY(0); } to { transform: translateY(-1.6%); } }
+.pets.paused .pet-fig, .pets.paused .leg { animation-play-state: paused; }
 .pet-tag {
   position: absolute; left: 50%; bottom: calc(100% + 4px);
   transform: translate(-50%, 4px); opacity: 0;
@@ -233,7 +235,7 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
 }
 .pet:hover .pet-tag, .pet:focus-visible .pet-tag { opacity: 1; transform: translate(-50%, 0); }
 @media (max-width: 860px) {
-  .pets { width: 100%; --lane: 50px; }
+  .pets { width: 100%; --lane: 58px; }
 }
 
 /* ───────── WORK ───────── */
