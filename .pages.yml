@@ -186,7 +186,10 @@ content:
       - name: cv
         label: "Activity list / 经历"
         type: object
-        list: true
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{fields.year} · {fields.text_zh}"
         fields:
           - name: year
             label: "Year / 年份"
@@ -197,3 +200,7 @@ content:
           - name: text_zh
             label: "中文"
             type: string
+          - name: image
+            label: "Hover photo / 悬停照片 (optional)"
+            type: image
+            description: "Shown when the mouse is over this line (on phones: tap the line). Landscape photos work best, keep it under 4MB. 鼠标移到这一条时显示（手机上点一下显示），横版照片效果最好，文件请小于 4MB。"

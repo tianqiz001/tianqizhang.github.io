@@ -735,6 +735,68 @@
     items.forEach((li) => cvIO.observe(li));
   }
 
+  /* ───────── activity list: photo that follows the cursor ───────── */
+  let cvFloat = null;
+  function cvHover() {
+    const list = $('#cvList');
+    if (list.dataset.hoverBound) return;
+    list.dataset.hoverBound = '1';
+    const fine = matchMedia('(hover: hover) and (pointer: fine)');
+    cvFloat = document.createElement('figure');
+    cvFloat.className = 'cv-float'; cvFloat.setAttribute('aria-hidden', 'true');
+    cvFloat.innerHTML = '<img alt="">';
+    document.body.appendChild(cvFloat);
+    const img = $('img', cvFloat);
+    let x = 0, y = 0, tx = 0, ty = 0, raf = 0, cur = null;
+    const loop = () => {
+      const dx = tx - x;
+      x += dx * 0.16; y += (ty - y) * 0.16;
+      const rot = Math.max(-8, Math.min(8, dx * 0.06));
+      const w = cvFloat.offsetWidth, h = cvFloat.offsetHeight || w * 0.66;
+      // sit beside the cursor on whichever side has room, and stay inside the screen
+      let px = x > innerWidth / 2 ? x - w - 28 : x + 28;
+      px = Math.max(12, Math.min(innerWidth - w - 12, px));
+      const py = Math.max(12, Math.min(innerHeight - h - 12, y - h / 2));
+      cvFloat.style.transform = `translate3d(${px}px, ${py}px, 0) rotate(${rot}deg)`;
+      raf = (Math.abs(tx - x) > 0.3 || Math.abs(ty - y) > 0.3 || cur) ? requestAnimationFrame(loop) : 0;
+    };
+    const show = (li, e) => {
+      if (cur === li) return;
+      cur = li;
+      const src = li.dataset.img;
+      if (img.getAttribute('src') !== src) {
+        cvFloat.classList.remove('on');
+        img.src = src;
+      }
+      if (!cvFloat.classList.contains('on')) { x = e.clientX; y = e.clientY; }
+      requestAnimationFrame(() => cvFloat.classList.add('on'));
+    };
+    const hide = () => { cur = null; cvFloat.classList.remove('on'); };
+    list.addEventListener('pointermove', (e) => {
+      if (!fine.matches || e.pointerType !== 'mouse') return;
+      tx = e.clientX; ty = e.clientY;
+      const li = e.target.closest('li.has-img');
+      if (li) show(li, e); else if (cur) hide();
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+    list.addEventListener('pointerleave', hide);
+    window.addEventListener('scroll', () => { if (cur) hide(); }, { passive: true });
+    // touch / keyboard: open the photo inline under the line
+    const toggle = (li) => {
+      const open = !li.classList.contains('open');
+      $$('li.open', list).forEach((o) => o.classList.remove('open'));
+      li.classList.toggle('open', open);
+    };
+    list.addEventListener('click', (e) => {
+      const li = e.target.closest('li.has-img');
+      if (li && !fine.matches) toggle(li);
+    });
+    list.addEventListener('keydown', (e) => {
+      const li = e.target.closest('li.has-img');
+      if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(li); }
+    });
+  }
+
   /* ───────── site text, about, contact ───────── */
   function renderSite() {
     $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
@@ -746,9 +808,12 @@
 
     const about = f(site, 'about');
     $('#aboutText').innerHTML = about.split(/\n\s*\n/).filter((p) => p.trim()).map((p) => `<p>${esc(p.trim())}</p>`).join('');
-    $('#cvList').innerHTML = (site.cv || []).map((c) =>
-      `<li><span class="yr m"><span data-yr="${esc(c.year)}">${esc(c.year)}</span></span><span class="txt m"><span>${esc(f(c, 'text'))}</span></span></li>`).join('');
+    $('#cvList').innerHTML = (site.cv || []).map((c) => {
+      const img = c.image ? esc(mediaUrl(c.image)) : '';
+      return `<li${img ? ` class="has-img" data-img="${img}" tabindex="0"` : ''}><span class="yr m"><span data-yr="${esc(c.year)}">${esc(c.year)}</span></span><span class="txt m"><span>${esc(f(c, 'text'))}${img ? '<i class="cv-cam" aria-hidden="true"></i>' : ''}</span></span>${img ? `<span class="cv-inline"><img src="${img}" alt="" loading="lazy"></span>` : ''}</li>`;
+    }).join('');
     cvReveal();
+    cvHover();
 
     const email = site.email || '';
     const a = $('#email');
