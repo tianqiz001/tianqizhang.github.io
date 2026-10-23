@@ -813,17 +813,23 @@
     const lane = $('#pets');
     if (!lane) return;
     const row = lane.querySelector('.pets-row');
-    if (reduceMotion) { row.style.transform = 'translateX(12px)'; lane.classList.add('paused'); return; }
-    let x = null, last = 0, paused = false;
+    // the pets walk on the spot; the meadow, forest and hills scroll past at different depths
+    const layers = [['.far', 600 / 100, 0.12], ['.mid', 420 / 100, 0.32], ['.near', 260 / 100, 1]]
+      .map(([sel, ratio, depth]) => ({ el: lane.querySelector(sel), ratio, depth, x: 0 }))
+      .filter((l) => l.el);
+    if (reduceMotion) { lane.classList.add('paused'); return; }
+    let last = 0, paused = false;
     const tick = (t) => {
       const dt = last ? Math.min(0.05, (t - last) / 1000) : 0;
       last = t;
-      const w = lane.clientWidth, rw = row.offsetWidth;
-      if (x === null) x = -rw * 0.35;
       if (!paused) {
-        x += Math.max(28, w / 20) * dt;
-        if (x > w) x = -rw;
-        row.style.transform = `translateX(${x.toFixed(1)}px)`;
+        const speed = lane.clientHeight * 0.55;   // px/s at the front layer, matched to the leg cycle
+        layers.forEach((l) => {
+          const tile = l.el.clientHeight * l.ratio;
+          if (!tile) return;
+          l.x = (l.x + speed * l.depth * dt) % tile;
+          l.el.style.backgroundPositionX = `${(-l.x).toFixed(1)}px`;
+        });
       }
       requestAnimationFrame(tick);
     };
