@@ -698,6 +698,43 @@
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
 
+  /* ───────── activity list: staggered reveal on scroll ───────── */
+  let cvSeen = false, cvIO = null;
+  function scrambleYear(el) {
+    const final = el.dataset.yr || '';
+    if (reduceMotion || !/\d/.test(final)) return;
+    const t0 = performance.now(), dur = 650;
+    (function tick(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      const fixed = Math.floor(p * final.length);
+      el.textContent = [...final].map((ch, i) =>
+        i < fixed || !/\d/.test(ch) ? ch : String(Math.floor(Math.random() * 10))).join('');
+      if (p < 1) requestAnimationFrame(tick); else el.textContent = final;
+    })(t0);
+  }
+  function cvReveal() {
+    const list = $('#cvList');
+    const items = $$('li', list);
+    if (cvIO) cvIO.disconnect();
+    if (cvSeen || reduceMotion || !('IntersectionObserver' in window)) {
+      list.classList.add('in'); items.forEach((li) => li.classList.add('in'));
+      cvSeen = true; return;
+    }
+    cvIO = new IntersectionObserver((entries) => {
+      const hits = entries.filter((e) => e.isIntersecting).map((e) => e.target)
+        .sort((a, b) => items.indexOf(a) - items.indexOf(b));
+      hits.forEach((li, k) => {
+        cvIO.unobserve(li);
+        li.style.setProperty('--d', `${k * 140}ms`);
+        list.classList.add('in');
+        requestAnimationFrame(() => li.classList.add('in'));
+        setTimeout(() => scrambleYear($('[data-yr]', li)), k * 140 + 120);
+      });
+      if (items.every((li) => li.classList.contains('in') || hits.includes(li))) { cvSeen = true; cvIO.disconnect(); }
+    }, { threshold: 0.35, rootMargin: '0px 0px -8% 0px' });
+    items.forEach((li) => cvIO.observe(li));
+  }
+
   /* ───────── site text, about, contact ───────── */
   function renderSite() {
     $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
@@ -710,7 +747,8 @@
     const about = f(site, 'about');
     $('#aboutText').innerHTML = about.split(/\n\s*\n/).filter((p) => p.trim()).map((p) => `<p>${esc(p.trim())}</p>`).join('');
     $('#cvList').innerHTML = (site.cv || []).map((c) =>
-      `<li><span class="yr">${esc(c.year)}</span><span>${esc(f(c, 'text'))}</span></li>`).join('');
+      `<li><span class="yr m"><span data-yr="${esc(c.year)}">${esc(c.year)}</span></span><span class="txt m"><span>${esc(f(c, 'text'))}</span></span></li>`).join('');
+    cvReveal();
 
     const email = site.email || '';
     const a = $('#email');

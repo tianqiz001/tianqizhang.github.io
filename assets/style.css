@@ -415,12 +415,46 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
   font-size: clamp(21px, 2vw, 28px); line-height: 1.32; text-wrap: balance;
 }
 .cv .label { color: var(--mute); margin: 0 0 12px; }
-.cv-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
-.cv-list li {
-  display: grid; grid-template-columns: 4.2em 1fr; gap: 12px;
-  padding: 11px 0; border-bottom: 1px solid var(--rule); font-size: 15px;
+.cv-list { list-style: none; margin: 0; padding: 0; position: relative; }
+.cv-list::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--rule);
+  transform-origin: left; transform: scaleX(0); transition: transform 1.1s cubic-bezier(.65,0,.2,1);
 }
-.cv-list .yr { font-family: var(--mono); font-size: 12px; color: var(--teal); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.cv-list.in::before { transform: scaleX(1); }
+.cv-list li {
+  --d: 0ms;
+  position: relative; isolation: isolate;
+  display: grid; grid-template-columns: 4.2em 1fr; gap: 12px;
+  padding: 11px 0; font-size: 15px; cursor: default;
+}
+/* divider draws left → right */
+.cv-list li::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--rule);
+  transform-origin: left; transform: scaleX(0);
+  transition: transform 1s cubic-bezier(.65,0,.2,1) var(--d), background-color .3s;
+}
+/* hover sweep */
+.cv-list li::before {
+  content: ""; position: absolute; inset: 0 -10px; z-index: -1;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--teal) 14%, transparent), transparent 85%);
+  transform-origin: left; transform: scaleX(0); transition: transform .5s cubic-bezier(.65,0,.2,1);
+}
+.cv-list .m { display: block; overflow: hidden; padding-bottom: 2px; }
+.cv-list .m > span {
+  display: block; transform: translateY(110%); opacity: 0;
+  transition: transform .9s cubic-bezier(.2,.8,.2,1) var(--d), opacity .6s var(--d);
+}
+.cv-list .txt > span {
+  transition: transform .9s cubic-bezier(.2,.8,.2,1) calc(var(--d) + 90ms), opacity .6s calc(var(--d) + 90ms), translate .4s cubic-bezier(.2,.8,.2,1);
+}
+.cv-list li.in::after { transform: scaleX(1); }
+.cv-list li.in .m > span { transform: none; opacity: 1; }
+.cv-list .yr { font-family: var(--mono); font-size: 12px; color: var(--teal); padding-top: 2px; font-variant-numeric: tabular-nums; transition: color .3s; }
+@media (hover: hover) {
+  .cv-list li:hover::before { transform: scaleX(1); }
+  .cv-list li:hover::after { background-color: var(--teal); }
+  .cv-list li.in:hover .txt > span { translate: 8px 0; }
+}
 
 /* ───────── CONTACT ───────── */
 .contact {
