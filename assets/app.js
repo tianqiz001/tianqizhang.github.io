@@ -316,10 +316,73 @@
   hero.addEventListener('pointerleave', () => { ptr.active = false; if (soundOn) thereminUpdate(ptr.nx, ptr.ny, false); });
   hero.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') { ptr.active = false; thereminUpdate(ptr.nx, ptr.ny, false); } });
 
+  /* pet layers: hovering a pet starts its Ndef (3 s fade-in); the layers stack up and only fade out
+     (18 s) once you leave the name area — by moving the pointer out or scrolling it out of view. */
+  const PET_SYNTH = { ubai: 'mercu-drum', kylin: 'mercu-kylin', bear: 'mercu-bear', sunny: 'mercu-beep' };
+  const FADE_OUT_MS = 18000;
+  let petBus = null, petNodes = null, petBuilding = null;
+  const petsOn = new Set();
+  let petLeftAt = 0;
+  function buildPets() {
+    if (petNodes || petBuilding || !ensureCtx() || !actx.audioWorklet) return petBuilding;
+    petBuilding = actx.audioWorklet.addModule('assets/synths/pets.worklet.js?v=20261023a').then(() => {
+      petBus = actx.createGain();
+      const safety = actx.createDynamicsCompressor();   // the layers sum hot (the drum alone peaks ~0.64)
+      safety.threshold.value = -3; safety.knee.value = 3; safety.ratio.value = 20; safety.attack.value = 0.002; safety.release.value = 0.2;
+      petBus.connect(safety).connect(master);
+      petNodes = {};
+      for (const [pet, name] of Object.entries(PET_SYNTH)) {
+        const n = new AudioWorkletNode(actx, name, { numberOfInputs: 0, outputChannelCount: [2] });
+        n.connect(petBus);
+        petNodes[pet] = n;
+      }
+      petsOn.forEach((p) => setPetGate(p, 1));
+    }).catch(() => { petBuilding = null; });
+    return petBuilding;
+  }
+  function setPetGate(pet, v) {
+    const n = petNodes && petNodes[pet];
+    if (n) n.parameters.get('gate').setValueAtTime(v, actx.currentTime);
+  }
+  function petEnter(pet) {
+    if (!soundOn || !PET_SYNTH[pet]) return;
+    if (petLeftAt) resumePets();
+    petsOn.add(pet);
+    buildPets();
+    setPetGate(pet, 1);
+  }
+  function leaveName() {
+    if (!petsOn.size || petLeftAt) return;
+    petLeftAt = performance.now();
+    petsOn.forEach((p) => setPetGate(p, 0));
+  }
+  function resumePets() {   // came back before the 18 s fade finished: the stack swells back in
+    const back = performance.now() - petLeftAt < FADE_OUT_MS;
+    petLeftAt = 0;
+    if (back) petsOn.forEach((p) => setPetGate(p, 1)); else petsOn.clear();
+  }
+  $$('.pet').forEach((el) => {
+    const pet = (el.className.match(/pet-(ubai|kylin|bear|sunny)/) || [])[1];
+    el.addEventListener('pointerenter', () => petEnter(pet));
+    el.addEventListener('pointerup', () => petEnter(pet));
+    el.addEventListener('focus', () => petEnter(pet));
+  });
+  hero.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' || e.pointerType === 'pen') leaveName(); });
+  hero.addEventListener('pointerenter', () => { if (petLeftAt && heroInView) resumePets(); });
+  let heroInView = true;
+  new IntersectionObserver(([en]) => {
+    heroInView = en.isIntersecting;
+    if (!heroInView) leaveName();
+  }, { threshold: 0.15 }).observe(hero);
+
   $('#soundToggle').addEventListener('click', () => {
     soundOn = !soundOn;
-    if (soundOn) { ensureCtx(); buildTheremin(); }
-    else if (theremin) thereminUpdate(ptr.nx, ptr.ny, false);
+    if (soundOn) { ensureCtx(); buildTheremin(); buildPets(); if (petBus) petBus.gain.setTargetAtTime(1, actx.currentTime, 0.05); }
+    else {
+      if (theremin) thereminUpdate(ptr.nx, ptr.ny, false);
+      if (petBus) petBus.gain.setTargetAtTime(0, actx.currentTime, 0.08);
+      petsOn.forEach((p) => setPetGate(p, 0)); petsOn.clear(); petLeftAt = 0;
+    }
     $('#soundToggle').setAttribute('aria-pressed', String(soundOn));
     $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
   });
