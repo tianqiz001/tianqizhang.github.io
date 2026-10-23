@@ -22,13 +22,14 @@
       "year": "2025",
       "media_type": "embed",
       "audio": "media/Kai_Stereo.mp3",
-      "embed_url": "https://youtu.be/9QTyO-xWjrw?si=cUCsfQc-F9jZwAHp",
+      "embed_url": "https://www.bilibili.com/video/BV14BG96FEk3/",
       "role_en": "Live Electronic Performance",
       "role_zh": "现场电子音乐演出",
       "description_en": "Take It Eazin is a work shaped in Ableton Live with ROLI Seaboard, Piano M, and Airwave, using touch and mid-air gesture to control pitch, timbre, and articulation. Neutone Morpho performs real-time AI timbre transfer: selected drum patterns become vocal textures, while recorded voices move toward string-like timbres. These reciprocal transformations mix the boundaries among percussion, voice, and instrumental sound. A seemingly aimless Seaboard glissando conceals a short poem about absurdity. Each letter is mapped to a pitch, and the resulting sequence is articulated through continuous gliding gestures.\nThe work was conceived during a period of profound anxiety about rapidly developing technology and the uncertainty of our human beings’ future, which gave rise to a fictional story outline. Four astronauts, led by Captain Eazin, leave Earth carrying a genetic archive into deep space, seeking a new opportunity.\nThe title is a phonetic play on take it easy. Faced with an absurd and rapidly changing world, it becomes a way of preserving agency while searching for a new human and artistic identity: we may not be able to stop the transformation, but we can learn to locate ourselves within it. Just take it easy!",
       "description_zh": "《Eazin》是一首实时交互电子音乐live，这首作品是在 Ableton Live中使用乐器ROLI Seaboard与 Airwave创作完成的，实现了对音高、音色以及手势姿态的连续精准控制。这个世界是荒谬的。这里既没有必然的意义，也没有被预承诺的终点。然而，我们依然应该选择前行，即便漫天的星辰让这份希望显得微弱不堪，即便终有一天，我们不得不独行。\n3i/atlas的出现让人类确定了外星文明的存在，各国首脑做好了两手准备，一是先报以友善态度谨慎交流，强化现有军事力量水平。二是秘密派出了一支小队，让他们带着搭载地球基因种子库的方舟舰启航宇宙，寻找新的生机。\n因为时间紧迫，宇宙航行小队注定设备简陋、人员稀少。小队由各国派遣，共四人，一个宇宙方舟。星际航行要求极高，所以纵然是举全球之力，也只能组建一支星舰，带着存有世界希望的DNA种子库航行于无尽宇宙。\nEazin是这支队伍的队长，他被选中是因为他对万事万物都抱有无尽的热爱，且思想极其活跃。在他于地球生活的短短22年里，他广泛地尝试了各种兴趣爱好。这种敏捷的变通能力，超级计算机模拟发现他应对突发事件的反应力以及决策能力处于团队首位。这首作品正是由Eazin队长委托作者创作：人生漫漫长路，若能在途中的某一刻遇见同行之人，本就是一种莫大的幸事。就连漫无目的、枯燥乏味的宇宙流浪，也不失为一种幸事",
       "featured": true,
-      "hidden": false
+      "hidden": false,
+      "cover": "media/bili-eazin.webp"
     },
     {
       "title_en": "Inspiration",
@@ -119,6 +120,51 @@
       "description_en": "This is a relaxing, casual fishing-themed incremental game designed to help you unwind. Join Captain Cat on a journey across fishing grounds around the world, where you can catch fish, gather resources, learn new talents, increase your power, upgrade your skills, and build a collection of treasures. Spend your coins to unlock permanent upgrades across an expansive talent tree. Every voyage promises a full haul—and will leave you shouting, “Just one more run!”",
       "description_zh": "《猫船长与环球渔场》是一款捕鱼主题的增量游戏，休闲、轻松、解压。你将与猫船长一起探索环球渔场，捕获海鱼、收集资源、学习天赋、强化威能、升级技能、收集藏品，并在庞大的天赋树中使用金币解锁永久升级！每次出海都将满载而归，你将振臂高呼“再来一局”！",
       "featured": true,
+      "hidden": false
+    },
+    {
+      "title_en": "LaCoste — Commercial Music",
+      "title_zh": "LaCoste 广告音乐",
+      "category": "film",
+      "year": "2023",
+      "media_type": "embed",
+      "embed_url": "https://www.bilibili.com/video/BV1mc41117pM/",
+      "cover": "media/bili-lacoste.webp",
+      "role_en": "Commercial music",
+      "role_zh": "广告配乐",
+      "description_en": "Music for a LaCoste commercial. Spliced audio keeps the transitions seamless and locked to the ad's cutting rhythm; Logic's built-in drums support the main melody, and Electric Mint from Session provides the guitar tones.",
+      "description_zh": "为 LaCoste 广告创作的音乐。用拼接音频让转场与广告剪辑节奏无缝衔接；鼓组选用 Logic 自带音色来衬托主旋律，吉他音色来自 Session 的 Electric Mint。",
+      "featured": false,
+      "hidden": false
+    },
+    {
+      "title_en": "Get Out — Re-score",
+      "title_zh": "《逃出绝命镇》片段配乐",
+      "category": "film",
+      "year": "2023",
+      "media_type": "embed",
+      "embed_url": "https://www.bilibili.com/video/BV1Vc411y7F1/",
+      "cover": "media/bili-getout.webp",
+      "role_en": "Re-score of a film excerpt",
+      "role_zh": "电影片段重新配乐",
+      "description_en": "An original score written for a scene from the film Get Out.",
+      "description_zh": "为电影《逃出绝命镇》（Get Out）中的一段片段创作的原创配乐。",
+      "featured": false,
+      "hidden": false
+    },
+    {
+      "title_en": "Lion — Re-score",
+      "title_zh": "《雄狮》片段配乐",
+      "category": "film",
+      "year": "2023",
+      "media_type": "embed",
+      "embed_url": "https://www.bilibili.com/video/BV1t94y1F7pP/",
+      "cover": "media/bili-lion.webp",
+      "role_en": "Re-score of a film excerpt",
+      "role_zh": "电影片段重新配乐",
+      "description_en": "An original score for a scene from the film Lion. It began as a piano piece and gradually grew into a small ensemble; the instrumentation is modest, but the theme is clear, aiming for a strong sense of story.",
+      "description_zh": "为电影《雄狮》（Lion）片段创作的原创配乐。最初只是一首钢琴曲，后来慢慢扩充而成。编制不大，但主题鲜明，是我一直想追求的那种故事感。",
+      "featured": false,
       "hidden": false
     }
   ]
