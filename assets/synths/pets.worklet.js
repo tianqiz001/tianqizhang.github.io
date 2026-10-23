@@ -151,20 +151,32 @@ class Layer extends AudioWorkletProcessor {
 }
 
 class Drum extends Layer {
+  // The SC patch, then (web only) softened and put in a room: the -0.5 ↔ 0.8 gate flips polarity
+  // instantly, which clicks hard, so the gate gets a ~2 ms slew, a gentle low-pass takes the fizz
+  // off the VarSaw edges, the level is trimmed, and a stereo FreeVerb makes it wet.
   constructor() {
     super();
     this.saws = [new VarSaw(0.4), new VarSaw(0.4)];
     this.rateNoise = new LFNoise1(); this.saw = new SawK(); this.sin1 = new SinOscK(); this.sin2 = new SinOscK();
     this.pulse = new LFPulseK(0.2, 0);
+    this.amp = 0; this.target = 0;
+    this.lp = [new RLPF(), new RLPF()];
+    this.verbs = [new FreeVerb(sampleRate, 0.5, 0.88, 0.45), new FreeVerb(sampleRate, 0.5, 0.88, 0.45, 23)];
+    this.slew = 1 - Math.exp(-1 / (sampleRate * 0.002));
   }
   block(sr, ctl) {
     const rate = expr(this.rateNoise.next(100, ctl), 4, 8);
     const width = 0.17 * this.sin2.next(0.157 * this.sin1.next(0.25 * this.saw.next(20, ctl), ctl), ctl);
     const p = this.pulse.next(rate, width, ctl);
-    const amp = (p ? 0.8 : -0.5) * 0.8;   // LFPulse (0/1).exprange(-0.5, 0.8) → -0.5 or 0.8
+    this.target = (p ? 0.8 : -0.5) * 0.8;   // LFPulse (0/1).exprange(-0.5, 0.8) * 0.8
+    const TRIM = 0.4;
     for (let i = 0; i < BLOCK; i++) {
-      this.L[i] = this.saws[0].next(52, 0.75, sr) * amp;
-      this.R[i] = this.saws[1].next(63, 0.75, sr) * amp;
+      this.amp += (this.target - this.amp) * this.slew;
+      const a = this.amp * TRIM;
+      const l = this.lp[0].next(this.saws[0].next(52, 0.75, sr) * a, 2400, 0.9, sr);
+      const r = this.lp[1].next(this.saws[1].next(63, 0.75, sr) * a, 2400, 0.9, sr);
+      this.L[i] = this.verbs[0].next(l) * 2.2;   // FreeVerb's 0.5 dry halves the level; bring the body back
+      this.R[i] = this.verbs[1].next(r) * 2.2;
     }
   }
 }

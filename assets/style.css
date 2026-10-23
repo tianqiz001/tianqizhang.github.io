@@ -130,16 +130,34 @@ html[lang^="zh"] .label.sec-title {
 .tools { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .clock { color: var(--mist); font-variant-numeric: tabular-nums; }
 .sound-toggle {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: none; border: 1px solid var(--rule-dark); border-radius: 999px;
-  padding: 6px 12px; text-transform: uppercase; letter-spacing: .05em; font-size: 11px;
-  font-family: var(--mono);
-  transition: border-color .2s, color .2s;
+  position: relative;
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(65, 226, 200, .08); color: var(--paper);
+  border: 1.5px solid rgba(65, 226, 200, .65); border-radius: 999px;
+  padding: 9px 18px 9px 13px; text-transform: uppercase; letter-spacing: .06em; font-size: 13px;
+  font-family: var(--mono); cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s, box-shadow .2s;
 }
-.sound-toggle:hover { border-color: var(--glow); }
-.sound-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mist); transition: background .2s, box-shadow .2s; }
-.sound-toggle[aria-pressed="true"] { color: var(--glow); border-color: var(--glow); }
-.sound-toggle[aria-pressed="true"] .sound-dot { background: var(--glow); box-shadow: 0 0 10px var(--glow); }
+.sound-toggle:hover { border-color: var(--glow); background: rgba(65, 226, 200, .16); }
+.sound-toggle:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
+/* off: a slow ring breathes outward so the button is easy to find */
+.sound-toggle::after {
+  content: ""; position: absolute; inset: -1.5px; border-radius: inherit;
+  border: 1.5px solid var(--glow); opacity: 0; pointer-events: none;
+  animation: soundPing 2.6s ease-out infinite;
+}
+@keyframes soundPing { 0% { opacity: .7; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(1.18, 1.45); } }
+#soundLabel { min-width: 9ch; }
+.sound-ico { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.sound-ico .spk { fill: currentColor; stroke-width: 1.2; }
+.sound-ico .w1, .sound-ico .w2 { opacity: 0; }
+.sound-toggle[aria-pressed="true"] { background: var(--glow); color: var(--abyss); border-color: var(--glow); box-shadow: 0 0 18px rgba(65, 226, 200, .45); }
+.sound-toggle[aria-pressed="true"]::after { animation: none; }
+.sound-toggle[aria-pressed="true"] .x { opacity: 0; }
+.sound-toggle[aria-pressed="true"] .w1 { opacity: 1; animation: soundWave 1.4s ease-in-out infinite; }
+.sound-toggle[aria-pressed="true"] .w2 { opacity: 1; animation: soundWave 1.4s ease-in-out .25s infinite; }
+@keyframes soundWave { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sound-toggle::after, .sound-ico .w1, .sound-ico .w2 { animation: none !important; } }
 .lang { display: inline-flex; border: 1px solid var(--rule-dark); border-radius: 999px; padding: 2px; }
 .lang button {
   background: none; border: 0; border-radius: 999px;

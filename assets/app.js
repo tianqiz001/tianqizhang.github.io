@@ -320,13 +320,15 @@
      (18 s) once you leave the name area — by moving the pointer out or scrolling it out of view. */
   const PET_SYNTH = { ubai: 'mercu-drum', kylin: 'mercu-kylin', bear: 'mercu-bear', sunny: 'mercu-beep' };
   const FADE_OUT_MS = 18000;
+  const PET_LEVEL = 0.45;   // overall level of the pet layers (≈ -7 dB)
   let petBus = null, petNodes = null, petBuilding = null;
   const petsOn = new Set();
   let petLeftAt = 0;
   function buildPets() {
     if (petNodes || petBuilding || !ensureCtx() || !actx.audioWorklet) return petBuilding;
-    petBuilding = actx.audioWorklet.addModule('assets/synths/pets.worklet.js?v=20261023a').then(() => {
+    petBuilding = actx.audioWorklet.addModule('assets/synths/pets.worklet.js?v=20261023c').then(() => {
       petBus = actx.createGain();
+      petBus.gain.value = PET_LEVEL;
       const safety = actx.createDynamicsCompressor();   // the layers sum hot (the drum alone peaks ~0.64)
       safety.threshold.value = -3; safety.knee.value = 3; safety.ratio.value = 20; safety.attack.value = 0.002; safety.release.value = 0.2;
       petBus.connect(safety).connect(master);
@@ -377,7 +379,7 @@
 
   $('#soundToggle').addEventListener('click', () => {
     soundOn = !soundOn;
-    if (soundOn) { ensureCtx(); buildTheremin(); buildPets(); if (petBus) petBus.gain.setTargetAtTime(1, actx.currentTime, 0.05); }
+    if (soundOn) { ensureCtx(); buildTheremin(); buildPets(); if (petBus) petBus.gain.setTargetAtTime(PET_LEVEL, actx.currentTime, 0.05); }
     else {
       if (theremin) thereminUpdate(ptr.nx, ptr.ny, false);
       if (petBus) petBus.gain.setTargetAtTime(0, actx.currentTime, 0.08);
