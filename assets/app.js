@@ -15,7 +15,7 @@
     en: {
       'nav.work': 'Work', 'nav.about': 'About', 'nav.activity': 'Activity', 'nav.contact': 'Contact',
       'sound.off': 'Sound off', 'sound.on': 'Sound on',
-      'hero.hint': 'Move across the name. Turn sound on to play it.',
+      'hero.hint': 'Turn sound on, then move across the name: left–right pans, up–down sets the frequency, moving faster adds modulation.',
       'hero.scroll': 'Scroll for work ↓',
       'work.label': 'Selected work', 'work.note': 'Click a window to listen or watch.',
       'work.all': 'All', 'work.empty': 'Nothing in this category yet.',
@@ -34,7 +34,7 @@
     zh: {
       'nav.work': '作品', 'nav.about': '关于', 'nav.activity': '经历', 'nav.contact': '联系',
       'sound.off': '声音 关', 'sound.on': '声音 开',
-      'hero.hint': '在名字上移动鼠标。打开声音，就能演奏它。',
+      'hero.hint': '打开声音，在名字上移动鼠标：左右控制声像，上下控制频率，移动得越快调制越强。',
       'hero.scroll': '向下查看作品 ↓',
       'work.label': '作品精选', 'work.note': '点击小窗即可试听或观看。',
       'work.all': '全部', 'work.empty': '这个类别暂时还没有作品。',
@@ -179,9 +179,29 @@
     } catch (e) { routed = false; }
   }
 
-  // The name is playable: x = pitch (A minor pentatonic, 3 octaves), y = loudness.
+  // The name is playable with Mercu's SuperCollider patch (Ndef \sound2, LatoocarfianC),
+  // ported to an AudioWorklet: x = pan, y = frequency, pointer speed = modulation.
+  // Browsers without AudioWorklet fall back to the small pentatonic theremin below.
+  let scBuilding = false;
+  async function buildTheremin() {
+    if (theremin || scBuilding || !ensureCtx()) return;
+    if (actx.audioWorklet && window.AudioWorkletNode) {
+      scBuilding = true;
+      try {
+        await actx.audioWorklet.addModule('assets/synths/latoocarfian.worklet.js?v=20261023a');
+        const node = new AudioWorkletNode(actx, 'mercu-sound2', { numberOfInputs: 0, outputChannelCount: [2] });
+        node.connect(master);
+        const P = (n) => node.parameters.get(n);
+        theremin = { sc: true, node, gate: P('gate'), pan: P('pan'), freqMul: P('freqMul'), mod: P('mod'), freq: 8050, panV: 0, modV: 0 };
+        scBuilding = false;
+        thereminUpdate(ptr.nx, ptr.ny, ptr.active);
+        return;
+      } catch (e) { scBuilding = false; }
+    }
+    buildFallbackTheremin();
+  }
   const PENTA = [0, 3, 5, 7, 10];
-  function buildTheremin() {
+  function buildFallbackTheremin() {
     if (theremin || !ensureCtx()) return;
     const o1 = actx.createOscillator(); o1.type = 'triangle';
     const o2 = actx.createOscillator(); o2.type = 'sine';
@@ -196,9 +216,24 @@
     o1.start(); o2.start();
     theremin = { o1, o2, vca, lp, freq: 220 };
   }
-  function thereminUpdate(nx, ny, active) {
+  let modTimer = 0;
+  function thereminUpdate(nx, ny, active, speed = 0) {
     if (!theremin) return;
     const now = actx.currentTime;
+    if (theremin.sc) {
+      const pan = nx * 2 - 1;                              // left … right
+      const mul = Math.pow(2, (0.5 - ny) * 3.2);           // centre = original 8050 / 9000 Hz, ±1.6 oct
+      const mod = Math.min(1, speed / 2.5);                // speed in hero-widths per second
+      theremin.pan.setValueAtTime(pan, now);
+      theremin.freqMul.setValueAtTime(mul, now);
+      theremin.mod.setValueAtTime(mod, now);
+      theremin.gate.setValueAtTime(active && soundOn ? 1 : 0, now);
+      theremin.freq = 8050 * mul; theremin.panV = pan;
+      theremin.modV = Math.max(mod, theremin.modV * 0.85);
+      clearTimeout(modTimer);
+      if (mod > 0) modTimer = setTimeout(() => { if (theremin) { theremin.mod.setValueAtTime(0, actx.currentTime); } }, 70);
+      return;
+    }
     const steps = PENTA.length * 3;
     const idx = Math.min(steps, Math.max(0, Math.floor(nx * (steps + 1))));
     const semis = Math.floor(idx / PENTA.length) * 12 + PENTA[idx % PENTA.length];
@@ -266,13 +301,17 @@
 
   /* pointer over hero */
   const ptr = { x: 0, y: 0, nx: 0.5, ny: 0.5, active: false };
+  let lastMove = { t: 0, x: 0, y: 0 };
   hero.addEventListener('pointermove', (e) => {
     const r = hero.getBoundingClientRect();
     ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top;
     ptr.nx = Math.min(1, Math.max(0, ptr.x / r.width));
     ptr.ny = Math.min(1, Math.max(0, ptr.y / r.height));
+    const now = performance.now(), dt = Math.max(8, now - lastMove.t);
+    const speed = lastMove.t && dt < 200 ? Math.hypot(e.clientX - lastMove.x, e.clientY - lastMove.y) / r.width / (dt / 1000) : 0;
+    lastMove = { t: now, x: e.clientX, y: e.clientY };
     ptr.active = true;
-    if (soundOn) thereminUpdate(ptr.nx, ptr.ny, true);
+    if (soundOn) thereminUpdate(ptr.nx, ptr.ny, true, speed);
   });
   hero.addEventListener('pointerleave', () => { ptr.active = false; if (soundOn) thereminUpdate(ptr.nx, ptr.ny, false); });
   hero.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') { ptr.active = false; thereminUpdate(ptr.nx, ptr.ny, false); } });
@@ -358,8 +397,12 @@
       if (overPet) { return; }   // the pet's own name tag is showing there
       heroCtx.font = `${10 * d}px "Martian Mono", monospace`;
       heroCtx.fillStyle = 'rgba(65,226,200,.9)';
+      if (theremin && theremin.sc) theremin.modV *= 0.95;
+      const panTxt = (v) => Math.abs(v) < 0.02 ? 'C' : `${v < 0 ? 'L' : 'R'}${Math.round(Math.abs(v) * 100)}`;
       const txt = soundOn && theremin
-        ? `${theremin.freq.toFixed(1)} HZ · ${Math.round((1 - ptr.ny) * 100)}%`
+        ? (theremin.sc
+          ? `PAN ${panTxt(theremin.panV)} · ${Math.round(theremin.freq)} HZ · MOD ${Math.round(theremin.modV * 100)}%`
+          : `${theremin.freq.toFixed(1)} HZ · ${Math.round((1 - ptr.ny) * 100)}%`)
         : `X ${ptr.nx.toFixed(2)}  Y ${(1 - ptr.ny).toFixed(2)}`;
       const tx = Math.min(x + 10 * d, W - heroCtx.measureText(txt).width - 8 * d);
       heroCtx.fillText(txt, tx, Math.max(16 * d, y - 10 * d));
