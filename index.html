@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Sans:wght@400..600&family=Martian+Mono:wdth,wght@75..112.5,300..500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=20261023i">
+<link rel="stylesheet" href="assets/style.css?v=20261023x">
 </head>
 <body>
 
@@ -21,6 +21,7 @@
       <ul class="nav">
         <li><a href="#work" data-i18n="nav.work">Work</a></li>
         <li><a href="#about" data-i18n="nav.about">About</a></li>
+        <li><a href="#activity" data-i18n="nav.activity">Activity</a></li>
         <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
       </ul>
       <div class="tools">
@@ -144,9 +145,18 @@
         </figure>
       </div>
       <div class="about-text" id="aboutText"></div>
-      <div class="cv">
-        <p class="label" data-i18n="about.cv">Selected activity</p>
-        <ol class="cv-list" id="cvList"></ol>
+    </div>
+  </section>
+
+  <section class="activity" id="activity" aria-labelledby="actHeading">
+    <div class="act-bg" aria-hidden="true">
+      <div class="act-wall" id="actWall"></div>
+      <div class="act-photos" id="actPhotos"></div>
+    </div>
+    <div class="act-stage" id="actStage">
+      <div class="wrap act-inner">
+        <p class="label act-label"><span id="actHeading" data-i18n="about.cv">Selected activity</span></p>
+        <div class="act-track"><ol class="cv-list" id="cvList"></ol></div>
       </div>
     </div>
   </section>
@@ -207,6 +217,6 @@
   </div>
 </div>
 
-<script src="assets/app.js?v=20261023i" defer></script>
+<script src="assets/app.js?v=20261023x" defer></script>
 </body>
 </html>

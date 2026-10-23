@@ -13,7 +13,7 @@
   /* ───────── interface text (EN / 中文) ───────── */
   const UI = {
     en: {
-      'nav.work': 'Work', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'nav.work': 'Work', 'nav.about': 'About', 'nav.activity': 'Activity', 'nav.contact': 'Contact',
       'sound.off': 'Sound off', 'sound.on': 'Sound on',
       'hero.hint': 'Move across the name. Turn sound on to play it.',
       'hero.scroll': 'Scroll for work ↓',
@@ -32,7 +32,7 @@
       'openOn': 'Open on'
     },
     zh: {
-      'nav.work': '作品', 'nav.about': '关于', 'nav.contact': '联系',
+      'nav.work': '作品', 'nav.about': '关于', 'nav.activity': '经历', 'nav.contact': '联系',
       'sound.off': '声音 关', 'sound.on': '声音 开',
       'hero.hint': '在名字上移动鼠标。打开声音，就能演奏它。',
       'hero.scroll': '向下查看作品 ↓',
@@ -700,9 +700,12 @@
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
 
-  /* ───────── activity list: staggered reveal on scroll ───────── */
-  let cvSeen = false, cvIO = null;
+  /* ───────── ACTIVITY: reveal, photo wall, hover (mouse) / wheel (touch) ───────── */
+  const actWheelMQ = matchMedia('(hover: none), (pointer: coarse)');
+  let cvSeen = false, cvIO = null, actBound = false, actCur = -1, actWheel = false;
+  let actCenters = [], actRaf = 0, actOffT = 0;
   function scrambleYear(el) {
+    if (!el) return;
     const final = el.dataset.yr || '';
     if (reduceMotion || !/\d/.test(final)) return;
     const t0 = performance.now(), dur = 650;
@@ -722,85 +725,170 @@
       list.classList.add('in'); items.forEach((li) => li.classList.add('in'));
       cvSeen = true; return;
     }
+    const play = (lis) => lis.forEach((li, k) => {
+      li.style.setProperty('--d', `${k * 120}ms`);
+      list.classList.add('in');
+      requestAnimationFrame(() => li.classList.add('in'));
+      setTimeout(() => scrambleYear($('[data-yr]', li)), k * 120 + 120);
+    });
+    if (actWheel) {
+      // in the wheel the rows are transformed, so watch the stage and reveal all at once
+      cvIO = new IntersectionObserver(([en]) => {
+        if (!en.isIntersecting) return;
+        cvIO.disconnect(); cvSeen = true; play(items);
+      }, { threshold: 0.3 });
+      cvIO.observe($('#actStage'));
+      return;
+    }
     cvIO = new IntersectionObserver((entries) => {
       const hits = entries.filter((e) => e.isIntersecting).map((e) => e.target)
         .sort((a, b) => items.indexOf(a) - items.indexOf(b));
-      hits.forEach((li, k) => {
-        cvIO.unobserve(li);
-        li.style.setProperty('--d', `${k * 140}ms`);
-        list.classList.add('in');
-        requestAnimationFrame(() => li.classList.add('in'));
-        setTimeout(() => scrambleYear($('[data-yr]', li)), k * 140 + 120);
-      });
+      hits.forEach((li) => cvIO.unobserve(li));
+      play(hits);
       if (items.every((li) => li.classList.contains('in') || hits.includes(li))) { cvSeen = true; cvIO.disconnect(); }
     }, { threshold: 0.35, rootMargin: '0px 0px -8% 0px' });
     items.forEach((li) => cvIO.observe(li));
   }
 
-  /* ───────── activity list: hovering a line swaps the About background (honest.fi style) ───────── */
-  function cvHover() {
-    const list = $('#cvList');
-    const section = $('#about');
-    let bg = $('.about-bg', section);
-    if (!bg) {
-      bg = document.createElement('div');
-      bg.className = 'about-bg'; bg.setAttribute('aria-hidden', 'true');
-      section.prepend(bg);
+  function actBuild() {
+    const items = $$('#cvList li');
+    const srcs = [...new Set(items.filter((li) => li.dataset.img).map((li) => li.dataset.img))];
+    // single-photo layers (crossfade between them)
+    const photos = $('#actPhotos');
+    $$('img', photos).forEach((im) => { if (!srcs.includes(im.dataset.src)) im.remove(); });
+    srcs.forEach((src) => {
+      if ($$('img', photos).some((im) => im.dataset.src === src)) return;
+      const im = new Image(); im.alt = ''; im.decoding = 'async';
+      im.dataset.src = src; im.src = src; photos.appendChild(im);
+    });
+    // photo wall: columns of all photos, each column twice for a seamless drift
+    const wall = $('#actWall');
+    const key = srcs.join('|') + '@' + (innerWidth < 700 ? 3 : innerWidth < 1100 ? 4 : 5);
+    if (wall.dataset.key !== key) {
+      wall.dataset.key = key;
+      const cols = innerWidth < 700 ? 3 : innerWidth < 1100 ? 4 : 5;
+      if (!srcs.length) { wall.innerHTML = ''; }
+      else {
+        const per = Math.max(4, Math.ceil(srcs.length / cols) + 2);
+        const ars = ['4 / 5', '1 / 1', '3 / 4', '4 / 3', '5 / 6'];
+        let k = 0, html = '';
+        for (let c = 0; c < cols; c++) {
+          const col = [];
+          for (let r = 0; r < per; r++) {
+            col.push(`<img src="${srcs[(k + c * 3) % srcs.length]}" alt="" loading="lazy" decoding="async" style="--ar:${ars[(k + c) % ars.length]}">`);
+            k++;
+          }
+          html += `<div class="act-col" style="--dur:${70 + c * 9}s">${col.join('')}${col.join('')}</div>`;
+        }
+        wall.innerHTML = html;
+      }
     }
-    // one layer per photo, so switching lines crossfades instead of reloading
-    const want = [...new Set($$('li.has-img', list).map((li) => li.dataset.img))];
-    $$('img', bg).forEach((im) => { if (!want.includes(im.dataset.src)) im.remove(); });
-    want.forEach((src) => {
-      if ($$('img', bg).some((im) => im.dataset.src === src)) return;
-      const im = new Image(); im.alt = ''; im.decoding = 'async'; im.loading = 'lazy';
-      im.dataset.src = src; im.src = src; bg.appendChild(im);
+  }
+
+  function actSelect(i) {
+    const items = $$('#cvList li');
+    if (i === actCur) return;
+    actCur = i;
+    items.forEach((li, k) => li.classList.toggle('cur', k === i));
+    const li = items[i];
+    const src = li && li.dataset.img;
+    $$('#actPhotos img').forEach((im) => im.classList.toggle('on', !!src && im.dataset.src === src));
+    $('#activity').classList.toggle('act-on', !!src);
+  }
+  function actClear(delay = 140) {
+    clearTimeout(actOffT);
+    actOffT = setTimeout(() => {
+      actCur = -1;
+      $$('#cvList li.cur').forEach((li) => li.classList.remove('cur'));
+      $$('#actPhotos img.on').forEach((im) => im.classList.remove('on'));
+      $('#activity').classList.remove('act-on');
+    }, delay);
+  }
+
+  // wheel geometry: centres of each row inside the (untransformed) list
+  function actMeasure() {
+    const list = $('#cvList');
+    actCenters = $$('li', list).map((li) => li.offsetTop + li.offsetHeight / 2);
+  }
+  function actWheelFrame() {
+    actRaf = 0;
+    if (!actWheel) return;
+    const sec = $('#activity'), list = $('#cvList');
+    const items = $$('li', list), n = items.length;
+    if (!n) return;
+    const r = sec.getBoundingClientRect();
+    const span = Math.max(1, r.height - innerHeight);
+    const p = Math.min(1, Math.max(0, -r.top / span));
+    const fpos = p * (n - 1);
+    const i0 = Math.floor(fpos), i1 = Math.min(n - 1, i0 + 1), fr = fpos - i0;
+    const c = actCenters[i0] + (actCenters[i1] - actCenters[i0]) * fr;
+    const trackH = $('.act-track').clientHeight;
+    list.style.transform = `translate3d(0, ${trackH / 2 - c}px, 0)`;
+    items.forEach((li, k) => {
+      const d = k - fpos, ad = Math.abs(d);
+      const rot = reduceMotion ? 0 : Math.max(-60, Math.min(60, -d * 22));
+      li.style.transform = `rotateX(${rot}deg) scale(${1 - Math.min(ad, 3) * 0.07})`;
+      li.style.opacity = String(Math.max(0, 1 - ad * 0.62));
     });
-    if (list.dataset.hoverBound) return;
-    list.dataset.hoverBound = '1';
-    const fine = matchMedia('(hover: hover) and (pointer: fine)');
-    let cur = null, offT = 0;
-    const show = (li) => {
-      clearTimeout(offT);
-      if (cur === li) return;
-      if (cur) cur.classList.remove('cur');
-      cur = li; li.classList.add('cur');
-      $$('img', bg).forEach((im) => im.classList.toggle('on', im.dataset.src === li.dataset.img));
-      section.classList.add('bg-on');
-    };
-    const hide = (delay = 140) => {
-      clearTimeout(offT);
-      offT = setTimeout(() => {
-        if (cur) cur.classList.remove('cur');
-        cur = null;
-        section.classList.remove('bg-on');
-        $$('img', bg).forEach((im) => im.classList.remove('on'));
-      }, delay);
-    };
+    // only light up once we're actually inside the section
+    if (r.top <= innerHeight * 0.35 && r.bottom >= innerHeight * 0.65) actSelect(Math.round(fpos));
+    else if (actCur !== -1) actClear(0);
+  }
+  const actKick = () => { if (actWheel && !actRaf) actRaf = requestAnimationFrame(actWheelFrame); };
+
+  function actMode() {
+    const sec = $('#activity'), list = $('#cvList');
+    actWheel = actWheelMQ.matches;
+    sec.classList.toggle('is-wheel', actWheel);
+    sec.style.setProperty('--n', $$('li', list).length || 1);
+    if (!actWheel) {
+      list.style.transform = '';
+      $$('li', list).forEach((li) => { li.style.transform = ''; li.style.opacity = ''; });
+      actClear(0);
+    } else {
+      actMeasure(); actKick();
+    }
+  }
+
+  function activity() {
+    actCur = -1;
+    actBuild();
+    actMode();
+    cvReveal();
+    if (actBound) { if (actWheel) { actMeasure(); actKick(); } return; }
+    actBound = true;
+    const list = $('#cvList');
+    // mouse: hover a line → its photo fills the background
     list.addEventListener('pointerover', (e) => {
-      if (!fine.matches || e.pointerType !== 'mouse') return;
+      if (actWheel || e.pointerType === 'touch') return;
       const li = e.target.closest('li');
-      if (li && li.classList.contains('has-img')) show(li); else hide();
+      if (!li) return;
+      clearTimeout(actOffT);
+      actSelect(+li.dataset.i);
     });
-    list.addEventListener('pointerleave', () => hide());
-    // touch / keyboard: open the photo inline under the line
-    const toggle = (li) => {
-      const open = !li.classList.contains('open');
-      $$('li.open', list).forEach((o) => o.classList.remove('open'));
-      li.classList.toggle('open', open);
-    };
-    list.addEventListener('click', (e) => {
-      const li = e.target.closest('li.has-img');
-      if (li && !fine.matches) toggle(li);
-    });
-    list.addEventListener('keydown', (e) => {
-      const li = e.target.closest('li.has-img');
-      if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(li); }
-    });
+    list.addEventListener('pointerleave', () => { if (!actWheel) actClear(); });
     list.addEventListener('focusin', (e) => {
-      const li = e.target.closest('li.has-img');
-      if (li && fine.matches) show(li);
+      const li = e.target.closest('li');
+      if (li && !actWheel) { clearTimeout(actOffT); actSelect(+li.dataset.i); }
     });
-    list.addEventListener('focusout', () => hide());
+    list.addEventListener('focusout', () => { if (!actWheel) actClear(); });
+    // wheel: tap a line to roll it to the centre
+    list.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li || !actWheel) return;
+      const sec = $('#activity'), n = $$('li', list).length;
+      const span = sec.offsetHeight - innerHeight;
+      const top = sec.getBoundingClientRect().top + scrollY;
+      scrollTo({ top: top + span * (+li.dataset.i / Math.max(1, n - 1)), behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+    addEventListener('scroll', actKick, { passive: true });
+    let rt = 0;
+    addEventListener('resize', () => {
+      clearTimeout(rt);
+      rt = setTimeout(() => { actBuild(); actMode(); }, 150);
+    });
+    (actWheelMQ.addEventListener ? actWheelMQ.addEventListener('change', actMode) : actWheelMQ.addListener(actMode));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (actWheel) { actMeasure(); actKick(); } });
   }
 
   /* ───────── site text, about, contact ───────── */
@@ -814,12 +902,11 @@
 
     const about = f(site, 'about');
     $('#aboutText').innerHTML = about.split(/\n\s*\n/).filter((p) => p.trim()).map((p) => `<p>${esc(p.trim())}</p>`).join('');
-    $('#cvList').innerHTML = (site.cv || []).map((c) => {
+    $('#cvList').innerHTML = (site.cv || []).map((c, i) => {
       const img = c.image ? esc(mediaUrl(c.image)) : '';
-      return `<li${img ? ` class="has-img" data-img="${img}" tabindex="0"` : ''}><span class="yr m"><span data-yr="${esc(c.year)}">${esc(c.year)}</span></span><span class="txt m"><span>${esc(f(c, 'text'))}${img ? '<i class="cv-cam" aria-hidden="true"></i>' : ''}</span></span>${img ? `<span class="cv-inline"><img src="${img}" alt="" loading="lazy"></span>` : ''}</li>`;
+      return `<li data-i="${i}"${img ? ` class="has-img" data-img="${img}"` : ''} tabindex="0"><span class="yr m"><span data-yr="${esc(c.year)}">${esc(c.year)}</span></span><span class="txt m"><span>${esc(f(c, 'text'))}${img ? '<i class="cv-cam" aria-hidden="true"></i>' : ''}</span></span></li>`;
     }).join('');
-    cvReveal();
-    cvHover();
+    activity();
 
     const email = site.email || '';
     const a = $('#email');
