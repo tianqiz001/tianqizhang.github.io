@@ -51,6 +51,29 @@ button { font: inherit; color: inherit; cursor: pointer; }
   line-height: 1.5;
 }
 html[lang^="zh"] .label { letter-spacing: .04em; }
+/* Section titles (Selected work, About me, Selected activity, Contact):
+   same mono voice as the small labels, but large enough to find at a glance. */
+.label.sec-title {
+  font-size: clamp(16px, 1.45vw, 22px);
+  font-variation-settings: "wdth" 100, "wght" 450;
+  letter-spacing: .16em;
+  line-height: 1.3;
+}
+html[lang^="zh"] .label.sec-title {
+  font-family: "Noto Sans SC", var(--mono);
+  font-size: clamp(18px, 1.6vw, 24px);
+  font-weight: 500;
+  letter-spacing: .2em;
+}
+.label.sec-title > span::before {
+  content: "";
+  display: inline-block;
+  width: .5em; height: .5em;
+  margin-right: .7em;
+  vertical-align: .08em;
+  border-radius: 50%;
+  background: var(--glow);
+}
 .wrap {
   max-width: 1440px;
   margin: 0 auto;
@@ -326,6 +349,8 @@ html[lang^="zh"] .statement-text {
 }
 .work-head-text { display: grid; gap: 14px; min-width: 0; flex: 1 1 420px; }
 .work-head-text .label { color: var(--mute); margin: 0; }
+.work-head-text .sec-title, .about-label.sec-title { color: var(--teal); }
+.work-head-text .sec-title > span::before, .about-label.sec-title > span::before { background: var(--teal); }
 .intro {
   margin: 0;
   font-size: clamp(18px, 1.5vw, 22px);
@@ -608,6 +633,7 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
   overflow: hidden;
 }
 .contact .label { color: var(--mist); }
+.contact .sec-title, .act-label.sec-title { color: var(--paper); }
 .contact-lead { margin: 18px 0 8px; color: var(--mist); max-width: 40ch; }
 .email-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .email {
