@@ -238,13 +238,23 @@ html[lang^="zh"] .label { letter-spacing: .04em; }
 .pet-front { position: absolute; left: 50%; bottom: 0; display: block; width: max-content; pointer-events: none;
   transform: translateX(-50%) scaleX(.08); transform-origin: 50% 100%; opacity: 0;
   transition: transform .13s ease-in, opacity 0s .13s; }
-.pet-front img { display: block; height: calc(var(--lane) * var(--s) * var(--fh)); width: auto; max-width: none;
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,.28)); transform-origin: 50% 100%; }
+.pet-front .pet-step { position: relative; display: block; transform-origin: 50% 100%; }
+.pet-front img { display: block; height: calc(var(--lane) * var(--s) * var(--fh)); width: auto; max-width: none; }
+.pet-front .ft { position: relative; filter: drop-shadow(0 2px 2px rgba(0,0,0,.28)); }
+.pet-front .fl, .pet-front .fr { position: absolute; inset: 0; width: 100%; height: 100%; transform-origin: 50% 80%; }
 .pet.facing .pet-fig { transform: scaleX(.08); opacity: 0; transition: transform .13s ease-in, opacity 0s .13s; }
 .pet.facing .pet-front { transform: translateX(-50%) scaleX(1); opacity: 1;
   transition: transform .26s cubic-bezier(.25, 1.5, .45, 1) .13s, opacity 0s .13s; }
-.pet.facing .pet-front img { animation: pet-breathe 1.8s ease-in-out .4s infinite alternate; }
-@keyframes pet-breathe { to { transform: scale(1.012, 1.02); } }
+/* facing you, it marks time: paws lift in turn (left / right halves of the legs), body sways and bobs */
+.pet.facing .pet-step { animation: pet-march .64s ease-in-out .3s infinite; }
+.pet.facing .fl { animation: pet-lift .64s ease-in-out .3s infinite; }
+.pet.facing .fr { animation: pet-lift .64s ease-in-out .62s infinite; }
+@keyframes pet-lift { 0%, 50%, 100% { transform: scaleY(1); } 25% { transform: scaleY(.66); } }
+@keyframes pet-march {
+  0%, 50%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-1.4%) rotate(1.2deg); }
+  75% { transform: translateY(-1.4%) rotate(-1.2deg); }
+}
 .pets.paused .pet-walk, .pets.paused .leg, .pets.paused .shin { animation-play-state: paused; }
 .pet-tag {
   position: absolute; left: 50%; bottom: calc(100% + 4px);
