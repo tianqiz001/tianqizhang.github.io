@@ -892,24 +892,38 @@
       .map(([sel, ratio, depth]) => ({ el: lane.querySelector(sel), ratio, depth, x: 0 }))
       .filter((l) => l.el);
 
-    // click / tap / Enter: that pet turns to face you for a few seconds; everyone waits
+    // mouse: hovering a pet turns it to face you, leaving turns it straight back.
+    // touch: a tap turns it (back after a few seconds, on a second tap, or on a tap elsewhere). keyboard: focus.
     const timers = new Map();
     row.addEventListener('pointerover', (e) => { overPet = !!e.target.closest('.pet'); });
     row.addEventListener('pointerleave', () => { overPet = false; });
     const sync = () => lane.classList.toggle('paused', reduceMotion || !!row.querySelector('.pet.facing'));
-    const face = (pet, on) => {
+    const face = (pet, on, hold) => {
       clearTimeout(timers.get(pet));
       pet.classList.toggle('facing', on);
       pet.setAttribute('aria-pressed', String(on));
-      if (on) timers.set(pet, setTimeout(() => face(pet, false), 3200));
+      if (on && hold) timers.set(pet, setTimeout(() => face(pet, false), hold));
       sync();
     };
-    $$('.pet', row).forEach((pet) => {
+    const pets = $$('.pet', row);
+    pets.forEach((pet) => {
       pet.setAttribute('aria-pressed', 'false');
-      pet.addEventListener('click', () => face(pet, !pet.classList.contains('facing')));
+      pet.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse' || e.pointerType === 'pen') face(pet, true); });
+      pet.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' || e.pointerType === 'pen') face(pet, false); });
+      pet.addEventListener('pointerup', (e) => {
+        if (e.pointerType !== 'touch') return;
+        const on = !pet.classList.contains('facing');
+        pets.forEach((p) => { if (p !== pet && p.classList.contains('facing')) face(p, false); });
+        face(pet, on, 3200);
+      });
+      pet.addEventListener('focus', () => { if (pet.matches(':focus-visible')) face(pet, true); });
+      pet.addEventListener('blur', () => face(pet, false));
       pet.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); face(pet, !pet.classList.contains('facing')); }
       });
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch' && !e.target.closest('.pet')) pets.forEach((p) => { if (p.classList.contains('facing')) face(p, false); });
     });
     sync();
     if (reduceMotion) return;
