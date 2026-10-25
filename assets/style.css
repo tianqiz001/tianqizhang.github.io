@@ -618,6 +618,23 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
   background: var(--abyss); color: var(--paper);
   padding-block: clamp(56px, 8vw, 112px) 24px;
   overflow: hidden;
+  position: relative; isolation: isolate;
+}
+.contact > .wrap { position: relative; z-index: 1; }
+/* studio picture behind the contact section: dimmed, original colours, faded edges */
+.contact-bg {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: url("scene/studio.webp") center 40% / cover no-repeat;
+  opacity: .24;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 62%, transparent 100%);
+}
+.contact-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 85% 75% at 60% 45%, transparent 35%, var(--abyss) 100%);
+}
+@media (max-width: 720px) {
+  .contact-bg { background-image: url("scene/studio-sm.webp"); background-position: 55% 30%; opacity: .15; }
 }
 .contact .label { color: var(--mist); }
 .contact .sec-title, .act-label.sec-title { color: var(--paper); }
