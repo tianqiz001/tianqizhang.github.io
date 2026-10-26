@@ -667,6 +667,16 @@
       const U = Math.max(12, units);
       return `<div class="win-row">${row.map((w) => cardHTML(w, n++, w.featured ? 3 : 2, U)).join('')}</div>`;
     }).join('');
+    $$('img.win-cover', box).forEach((img) => {
+      const mark = () => {
+        if (img.naturalHeight > img.naturalWidth * 1.05) {
+          const v = img.closest('.win-view');
+          v.classList.add('is-portrait');
+          v.style.setProperty('--cover', `url("${img.currentSrc || img.src}")`);
+        }
+      };
+      if (img.complete && img.naturalWidth) mark(); else img.addEventListener('load', mark, { once: true });
+    });
     $$('canvas[data-gen]', box).forEach((cv) => {
       const w = works.find((x) => x._id === cv.dataset.gen);
       if (w) drawCover(cv, w, figMap.get(w._id));

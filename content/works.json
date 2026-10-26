@@ -55,13 +55,13 @@
       "year": "2026",
       "media_type": "embed",
       "embed_url": "https://music.163.com/#/song?id=3364288997",
-      "cover": "media/mercude.png",
+      "cover": "media/rainbow-night.jpg",
       "role_en": "Composition, Arrangement and production",
       "role_zh": "作曲、编曲、制作",
       "description_en": "If one day, I no longer love myself, will you come back and love me? Song for Rainbow Night.",
       "description_zh": "夏日酒吧，身穿彩裙的女孩随着音乐起舞。\n灯光流转，路的尽头那是谁的身影？\n如何才能见到你？如果有一天我不爱自己了，你能不能回来爱我？",
       "link": "https://c6.y.qq.com/base/fcgi-bin/u?__=G1h38bNwqCnf",
-      "featured": true,
+      "featured": false,
       "hidden": false
     },
     {
@@ -165,6 +165,21 @@
       "role_zh": "电影片段重新配乐",
       "description_en": "An original score for a scene from the film Lion. It began as a piano piece and gradually grew into a small ensemble; the instrumentation is modest, but the theme is clear, aiming for a strong sense of story.",
       "description_zh": "为电影《雄狮》（Lion）片段创作的原创配乐。最初只是一首钢琴曲，后来慢慢扩充而成。编制不大，但主题鲜明，是我一直想追求的那种故事感。",
+      "featured": false,
+      "hidden": false
+    },
+    {
+      "title_en": "I See the Moon",
+      "title_zh": "我看见月亮",
+      "category": "fixedmedia",
+      "year": "2025",
+      "media_type": "embed",
+      "embed_url": "https://www.youtube.com/watch?v=JJ6vNZoHBnw",
+      "cover": "media/i-see-the-moon.jpg",
+      "role_en": "Electroacoustic · fixed media",
+      "role_zh": "电子原声 · 固定媒体",
+      "description_en": "An electroacoustic reflection on silent love and unseen companionship. It begins from the thought that the most painful thing would be to see the bright moon shine for everyone but never for oneself, and arrives at the idea that simply living beneath the moon each night is already a quiet kind of happiness. The piece weaves together granulated recordings of my own voice with the sound of prayer beads bought at Yuelu Mountain.\n\nPremiered at Cinema for the Ears, Fall 2025 Concert 1 (CECM, Indiana University), November 3, 2025, Ford-Crawford Hall.",
+      "description_zh": "一首关于沉默的爱与看不见的陪伴的电子原声作品。它从这样一个念头出发：最痛苦的，莫过于看见明月照耀着所有人，却唯独不照向自己；而最终想到，每个夜晚能活在月光之下，本身就已经是一种安静的幸福。作品把我自己声音的粒子化录音，与在岳麓山买的佛珠的声音交织在一起。\n\n首演于印第安纳大学 CECM「Cinema for the Ears」2025 秋季第一场音乐会，2025 年 11 月 3 日，Ford-Crawford Hall。",
       "featured": false,
       "hidden": false
     }
