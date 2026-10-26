@@ -183,6 +183,36 @@
       "description_zh": "一首关于沉默的爱与看不见的陪伴的电子原声作品。它从这样一个念头出发：最痛苦的，莫过于看见明月照耀着所有人，却唯独不照向自己；而最终想到，每个夜晚能活在月光之下，本身就已经是一种安静的幸福。作品把我自己声音的粒子化录音，与在岳麓山买的佛珠的声音交织在一起。\n\n首演于印第安纳大学 CECM「Cinema for the Ears」2025 秋季第一场音乐会，2025 年 11 月 3 日，Ford-Crawford Hall。",
       "featured": false,
       "hidden": false
+    },
+    {
+      "title_en": "New York Time",
+      "title_zh": "New York Time",
+      "category": "film",
+      "year": "2024",
+      "media_type": "embed",
+      "embed_url": "https://www.bilibili.com/video/BV1XeWCzHE1Q/?p=1",
+      "cover": "media/bili-nyt.webp",
+      "role_en": "Original score for a short",
+      "role_zh": "短片原创配乐",
+      "description_en": "Original score for the short New York Time, written as part of my film scoring studies.",
+      "description_zh": "为短片《New York Time》创作的原创配乐，影视配乐专业课程作品。",
+      "featured": false,
+      "hidden": false
+    },
+    {
+      "title_en": "Clos19 — Commercial Music",
+      "title_zh": "Clos19 广告音乐",
+      "category": "film",
+      "year": "2024",
+      "media_type": "embed",
+      "embed_url": "https://www.bilibili.com/video/BV1XeWCzHE1Q/?p=2",
+      "cover": "media/bili-clos.webp",
+      "role_en": "Commercial music",
+      "role_zh": "广告配乐",
+      "description_en": "Music for a Clos19 commercial, written as part of my film scoring studies.",
+      "description_zh": "为 Clos19 广告创作的配乐，影视配乐专业课程作品。",
+      "featured": false,
+      "hidden": false
     }
   ]
 }

@@ -117,7 +117,8 @@
       return { kind: 'vimeo', id: m[1], src: `https://player.vimeo.com/video/${m[1]}?autoplay=1&title=0&byline=0`, host: 'vimeo.com' };
     }
     if ((m = url.match(/bilibili\.com\/video\/(BV[\w]+)/i))) {
-      return { kind: 'bilibili', id: m[1], src: `https://player.bilibili.com/player.html?bvid=${m[1]}&autoplay=1&high_quality=1&danmaku=0`, host: 'bilibili.com' };
+      const bp = (url.match(/[?&]p=(\d+)/) || [])[1];
+      return { kind: 'bilibili', id: m[1] + (bp && bp !== '1' ? `?p=${bp}` : ''), src: `https://player.bilibili.com/player.html?bvid=${m[1]}${bp ? `&p=${bp}` : ''}&autoplay=1&high_quality=1&danmaku=0`, host: 'bilibili.com' };
     }
     // music players
     if ((m = url.match(/music\.163\.com\/.*?song(?:\?id=|\/)(\d+)/))) {
