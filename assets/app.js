@@ -147,7 +147,7 @@
 
   /* ───────── audio engine (shared by player, theremin, visuals) ───────── */
   const audio = $('#audio');
-  let actx = null, analyser = null, master = null, mediaSrc = null, routed = false;
+  let actx = null, analyser = null, master = null, scBus = null, mediaSrc = null, routed = false;
   let freqData = null, timeData = null;
   let theremin = null;
   let soundOn = false;
@@ -158,6 +158,8 @@
     if (!AC) return null;
     actx = new AC();
     master = actx.createGain();
+    scBus = actx.createGain();   // all the SuperCollider layers; ducked while a work is playing
+    scBus.connect(master);
     analyser = actx.createAnalyser();
     analyser.fftSize = 2048;
     analyser.smoothingTimeConstant = 0.82;
@@ -190,7 +192,7 @@
       try {
         await actx.audioWorklet.addModule('assets/synths/latoocarfian.worklet.js?v=20261023a');
         const node = new AudioWorkletNode(actx, 'mercu-sound2', { numberOfInputs: 0, outputChannelCount: [2] });
-        node.connect(master);
+        node.connect(scBus);
         const P = (n) => node.parameters.get(n);
         theremin = { sc: true, node, gate: P('gate'), pan: P('pan'), freqMul: P('freqMul'), mod: P('mod'), freq: 8050, panV: 0, modV: 0 };
         scBuilding = false;
@@ -212,7 +214,7 @@
     const fb = actx.createGain(); fb.gain.value = 0.32;
     const wet = actx.createGain(); wet.gain.value = 0.28;
     o1.connect(lp); o2.connect(o2g).connect(lp); lp.connect(vca);
-    vca.connect(master); vca.connect(delay); delay.connect(fb).connect(delay); delay.connect(wet).connect(master);
+    vca.connect(scBus); vca.connect(delay); delay.connect(fb).connect(delay); delay.connect(wet).connect(scBus);
     o1.start(); o2.start();
     theremin = { o1, o2, vca, lp, freq: 220 };
   }
@@ -332,7 +334,7 @@
       petBus.gain.value = PET_LEVEL;
       const safety = actx.createDynamicsCompressor();   // the layers sum hot (the drum alone peaks ~0.64)
       safety.threshold.value = -3; safety.knee.value = 3; safety.ratio.value = 20; safety.attack.value = 0.002; safety.release.value = 0.2;
-      petBus.connect(safety).connect(master);
+      petBus.connect(safety).connect(scBus);
       petNodes = {};
       for (const [pet, name] of Object.entries(PET_SYNTH)) {
         const n = new AudioWorkletNode(actx, name, { numberOfInputs: 0, outputChannelCount: [2] });
@@ -749,7 +751,7 @@
   });
   $('#pToggle').addEventListener('click', () => { ensureCtx(); audio.paused ? audio.play() : audio.pause(); });
   $('#pClose').addEventListener('click', () => {
-    audio.pause(); playingId = null; player.hidden = true; markCards();
+    audio.pause(); playingId = null; player.hidden = true; markCards(); duckSC();
   });
 
   /* ───────── footer MERCU = spectrum of everything the page is playing ─────────
@@ -818,6 +820,27 @@
     });
   }
 
+  /* ───────── works duck the SuperCollider layers ─────────
+     While a work plays (the audio player, or anything open in the video/embed window) the
+     LatoocarfianC and pet layers drop to silence; when it stops they swell back over 18 s. */
+  const SC_RETURN = 18;
+  let scDucked = false;
+  function duckSC() {
+    const busy = (!audio.paused && !!playingId) || !modal.hidden;
+    if (!scBus || busy === scDucked) { scDucked = scBus ? busy : scDucked; return; }
+    scDucked = busy;
+    const g = scBus.gain, now = actx.currentTime;
+    const from = g.value;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(from, now);
+    if (busy) g.setTargetAtTime(0, now, 0.12);
+    else {   // sine-shaped rise, like an Ndef fade (ramp points stay cancellable if a work starts again)
+      const N = 48;
+      for (let i = 1; i <= N; i++) g.linearRampToValueAtTime(from + (1 - from) * Math.sin((i / N) * Math.PI / 2), now + SC_RETURN * i / N);
+    }
+  }
+  ['play', 'pause', 'ended', 'emptied'].forEach((ev) => audio.addEventListener(ev, duckSC));
+
   /* ───────── video modal ───────── */
   const modal = $('#modal');
   function openModal(w, kind) {
@@ -848,6 +871,7 @@
     }
     fillModalText();
     modal.hidden = false;
+    ensureCtx(); duckSC();
     document.body.style.overflow = 'hidden';
     $('#modalClose').focus({ preventScroll: true });
   }
@@ -862,6 +886,7 @@
   function closeModal() {
     modal.hidden = true;
     $('#modalBody').innerHTML = '';
+    duckSC();
     modalWork = null;
     document.body.style.overflow = '';
   }
