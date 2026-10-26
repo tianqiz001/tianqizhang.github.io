@@ -757,13 +757,14 @@
      The bars are background layers clipped to the glyphs (background-clip: text). Anything that
      goes through the Web Audio master is measured: the SuperCollider layers, the work player and
      self-hosted videos. Embedded players (YouTube, Bilibili, …) are cross-origin and can't be. */
-  const FOOT_BARS = 7;
-  const FOOT_BAR_LAYER = 'linear-gradient(to right, transparent 14%, var(--glow) 14%, var(--glow) 86%, transparent 86%)';
+  const FOOT_BARS = 16;
+  const FOOT_BAR_LAYER = 'linear-gradient(to right, transparent 18%, var(--glow) 18%, var(--glow) 82%, transparent 82%)';
   const FOOT_BAR_IMG = Array(FOOT_BARS).fill(FOOT_BAR_LAYER).join(',');
   const FOOT_BAR_POS = Array.from({ length: FOOT_BARS }, (_, k) => `${(k / (FOOT_BARS - 1) * 100).toFixed(3)}% 100%`).join(',');
   let footLetters = [];
   let footLevels = [];
   let footVisible = false;
+  let footAn = null, footData = null;   // its own analyser with a long FFT so the narrow low bands get their own bins
   let footIdle = true;
   new IntersectionObserver(([en]) => { footVisible = en.isIntersecting; }).observe($('.footer-name'));
 
@@ -781,10 +782,17 @@
     const total = footLetters.length * FOOT_BARS;
     if (footLevels.length !== total) footLevels = new Array(total).fill(0);
     let any = false;
-    if (analyser) {
-      analyser.getByteFrequencyData(freqData);
+    if (analyser && !footAn) {
+      footAn = actx.createAnalyser();
+      footAn.fftSize = 8192; footAn.smoothingTimeConstant = 0.6;
+      master.connect(footAn);
+      footData = new Uint8Array(footAn.frequencyBinCount);
+    }
+    if (footAn) {
+      const freqData = footData;
+      footAn.getByteFrequencyData(freqData);
       const nyq = actx.sampleRate / 2, n = freqData.length;
-      const F0 = 40, F1 = 14000;
+      const F0 = 45, F1 = 15000;
       for (let b = 0; b < total; b++) {
         const fa = F0 * Math.pow(F1 / F0, b / total), fb = F0 * Math.pow(F1 / F0, (b + 1) / total);
         const ia = Math.max(1, Math.floor(fa / nyq * n)), ib = Math.max(ia + 1, Math.ceil(fb / nyq * n));
