@@ -151,7 +151,7 @@
       "role_zh": "电影片段重新配乐",
       "description_en": "An original score written for a scene from the film Get Out.",
       "description_zh": "为电影《逃出绝命镇》（Get Out）中的一段片段创作的原创配乐。",
-      "featured": false,
+      "featured": true,
       "hidden": false
     },
     {
@@ -196,7 +196,7 @@
       "role_zh": "短片原创配乐",
       "description_en": "Original score for the short New York Time, written as part of my film scoring studies.",
       "description_zh": "为短片《New York Time》创作的原创配乐，影视配乐专业课程作品。",
-      "featured": false,
+      "featured": true,
       "hidden": false
     },
     {
