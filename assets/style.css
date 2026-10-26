@@ -676,6 +676,15 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
   white-space: nowrap;
   user-select: none;
 }
+/* each letter is a little spectrum analyser: bars are background layers clipped to the glyph */
+.footer-name .fl {
+  display: inline-block;
+  color: transparent;
+  background-repeat: no-repeat;
+  background-size: 0 0;
+  -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(0 0 14px rgba(65, 226, 200, .35));
+}
 .foot-meta { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--rule-dark); padding-top: 14px; }
 .foot-meta a { text-decoration: none; }
 .foot-meta a:hover { color: var(--glow); }

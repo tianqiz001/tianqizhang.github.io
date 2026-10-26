@@ -285,7 +285,10 @@
     });
     const foot = $('.footer-name');
     if (foot) {
-      foot.textContent = (site.name_line2 || 'Mercu').replace(/\/\s*$/, '');
+      const word = (site.name_line2 || 'Mercu').replace(/\/\s*$/, '');
+      foot.innerHTML = [...word].map((ch) => `<span class="fl">${esc(ch)}</span>`).join('');
+      footLetters = $$('.fl', foot);
+      footLetters.forEach((el) => { el.style.backgroundImage = FOOT_BAR_IMG; el.style.backgroundPosition = FOOT_BAR_POS; });
       foot.style.fontSize = '100px';
       const fw = foot.getBoundingClientRect().width;
       const fa = foot.parentElement.clientWidth;
@@ -316,14 +319,12 @@
   hero.addEventListener('pointerleave', () => { ptr.active = false; if (soundOn) thereminUpdate(ptr.nx, ptr.ny, false); });
   hero.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') { ptr.active = false; thereminUpdate(ptr.nx, ptr.ny, false); } });
 
-  /* pet layers: hovering a pet starts its Ndef (3 s fade-in); the layers stack up and only fade out
-     (18 s) once you leave the name area — by moving the pointer out or scrolling it out of view. */
+  /* pet layers: hovering a pet starts its Ndef (3 s fade-in); the layers stack up and keep playing
+     anywhere on the page until the sound toggle is switched off. */
   const PET_SYNTH = { ubai: 'mercu-drum', kylin: 'mercu-kylin', bear: 'mercu-bear', sunny: 'mercu-beep' };
-  const FADE_OUT_MS = 18000;
   const PET_LEVEL = 0.45;   // overall level of the pet layers (≈ -7 dB)
   let petBus = null, petNodes = null, petBuilding = null;
   const petsOn = new Set();
-  let petLeftAt = 0;
   function buildPets() {
     if (petNodes || petBuilding || !ensureCtx() || !actx.audioWorklet) return petBuilding;
     petBuilding = actx.audioWorklet.addModule('assets/synths/pets.worklet.js?v=20261023c').then(() => {
@@ -348,20 +349,9 @@
   }
   function petEnter(pet) {
     if (!soundOn || !PET_SYNTH[pet]) return;
-    if (petLeftAt) resumePets();
     petsOn.add(pet);
     buildPets();
     setPetGate(pet, 1);
-  }
-  function leaveName() {
-    if (!petsOn.size || petLeftAt) return;
-    petLeftAt = performance.now();
-    petsOn.forEach((p) => setPetGate(p, 0));
-  }
-  function resumePets() {   // came back before the 18 s fade finished: the stack swells back in
-    const back = performance.now() - petLeftAt < FADE_OUT_MS;
-    petLeftAt = 0;
-    if (back) petsOn.forEach((p) => setPetGate(p, 1)); else petsOn.clear();
   }
   $$('.pet').forEach((el) => {
     const pet = (el.className.match(/pet-(ubai|kylin|bear|sunny)/) || [])[1];
@@ -369,13 +359,6 @@
     el.addEventListener('pointerup', () => petEnter(pet));
     el.addEventListener('focus', () => petEnter(pet));
   });
-  hero.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' || e.pointerType === 'pen') leaveName(); });
-  hero.addEventListener('pointerenter', () => { if (petLeftAt && heroInView) resumePets(); });
-  let heroInView = true;
-  new IntersectionObserver(([en]) => {
-    heroInView = en.isIntersecting;
-    if (!heroInView) leaveName();
-  }, { threshold: 0.15 }).observe(hero);
 
   $('#soundToggle').addEventListener('click', () => {
     soundOn = !soundOn;
@@ -383,7 +366,7 @@
     else {
       if (theremin) thereminUpdate(ptr.nx, ptr.ny, false);
       if (petBus) petBus.gain.setTargetAtTime(0, actx.currentTime, 0.08);
-      petsOn.forEach((p) => setPetGate(p, 0)); petsOn.clear(); petLeftAt = 0;
+      petsOn.forEach((p) => setPetGate(p, 0)); petsOn.clear();
     }
     $('#soundToggle').setAttribute('aria-pressed', String(soundOn));
     $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
@@ -525,6 +508,7 @@
       drawHero(time);
     }
     drawPlayer(time);
+    drawFooter();
     requestAnimationFrame(frame);
   }
 
@@ -768,6 +752,64 @@
     audio.pause(); playingId = null; player.hidden = true; markCards();
   });
 
+  /* ───────── footer MERCU = spectrum of everything the page is playing ─────────
+     Each letter holds FOOT_BARS bars; together they cover ~40 Hz – 14 kHz on a log scale.
+     The bars are background layers clipped to the glyphs (background-clip: text). Anything that
+     goes through the Web Audio master is measured: the SuperCollider layers, the work player and
+     self-hosted videos. Embedded players (YouTube, Bilibili, …) are cross-origin and can't be. */
+  const FOOT_BARS = 7;
+  const FOOT_BAR_LAYER = 'linear-gradient(to right, transparent 14%, var(--glow) 14%, var(--glow) 86%, transparent 86%)';
+  const FOOT_BAR_IMG = Array(FOOT_BARS).fill(FOOT_BAR_LAYER).join(',');
+  const FOOT_BAR_POS = Array.from({ length: FOOT_BARS }, (_, k) => `${(k / (FOOT_BARS - 1) * 100).toFixed(3)}% 100%`).join(',');
+  let footLetters = [];
+  let footLevels = [];
+  let footVisible = false;
+  let footIdle = true;
+  new IntersectionObserver(([en]) => { footVisible = en.isIntersecting; }).observe($('.footer-name'));
+
+  function routeVideo(v) {
+    if (!v || !ensureCtx()) return;
+    try {
+      const u = new URL(v.currentSrc || v.src, location.href);
+      if (u.origin !== location.origin) return;   // cross-origin media would go silent in Web Audio
+      actx.createMediaElementSource(v).connect(master);
+    } catch (e) { /* already routed or not allowed: the video just plays normally */ }
+  }
+
+  function drawFooter() {
+    if (!footVisible || !footLetters.length) return;
+    const total = footLetters.length * FOOT_BARS;
+    if (footLevels.length !== total) footLevels = new Array(total).fill(0);
+    let any = false;
+    if (analyser) {
+      analyser.getByteFrequencyData(freqData);
+      const nyq = actx.sampleRate / 2, n = freqData.length;
+      const F0 = 40, F1 = 14000;
+      for (let b = 0; b < total; b++) {
+        const fa = F0 * Math.pow(F1 / F0, b / total), fb = F0 * Math.pow(F1 / F0, (b + 1) / total);
+        const ia = Math.max(1, Math.floor(fa / nyq * n)), ib = Math.max(ia + 1, Math.ceil(fb / nyq * n));
+        let peak = 0;
+        for (let i = ia; i < ib && i < n; i++) peak = Math.max(peak, freqData[i]);
+        // gentle tilt so the highs (which carry less energy) still move
+        const tilt = 0.85 + 0.35 * (b / total);
+        const target = Math.min(1, Math.pow(peak / 255, 1.6) * tilt * 1.15);
+        const cur = footLevels[b];
+        footLevels[b] = target > cur ? cur + (target - cur) * 0.6 : cur + (target - cur) * 0.12;
+        if (footLevels[b] > 0.004) any = true;
+      }
+    }
+    if (!any && footIdle) return;   // nothing playing and the letters are already empty
+    footIdle = !any;
+    footLetters.forEach((el, li) => {
+      const sizes = [];
+      for (let k = 0; k < FOOT_BARS; k++) {
+        const v = any ? footLevels[li * FOOT_BARS + k] : 0;
+        sizes.push(`${(100 / FOOT_BARS).toFixed(3)}% ${(v * 100).toFixed(1)}%`);
+      }
+      el.style.backgroundSize = sizes.join(',');
+    });
+  }
+
   /* ───────── video modal ───────── */
   const modal = $('#modal');
   function openModal(w, kind) {
@@ -781,6 +823,7 @@
     if (kind === 'video') {
       body.innerHTML = `<video controls autoplay playsinline src="${esc(mediaUrl(w.video))}"${w.cover ? ` poster="${esc(mediaUrl(w.cover))}"` : ''}></video>`;
       $('#modalFile').textContent = basename(w.video);
+      routeVideo(body.querySelector('video'));
       body.querySelector('video').addEventListener('error', () => {
         if (modalWork !== w) return;
         if (w.embed_url) openModal(w, 'embed');      // uploaded file broken: fall back to the link
