@@ -7,6 +7,7 @@
       "year": "2025",
       "media_type": "video",
       "audio": "media/Kai_Stereo.mp3",
+      "video": "media/Kai.mp4",
       "embed_url": "https://youtu.be/2KzO18cmwmU?si=swZWV-2AZqFlpFV2",
       "cover": "media/c84da326-2ffb-4448-831a-cb1b704846c5.png",
       "role_en": "Live Electronic Performance",
@@ -14,23 +15,22 @@
       "description_en": "Kai is an audiovisual work for eight-channel spatial audio and real-time visuals, created in Kyma and performed through a Wacom tablet as a gestural interface. Grounded in existentialism and absurdism, the work explores memory, identity, and persistence, considering memory not simply as a record of the past but as a process through which personal identity and meaning are continuously reconstructed. Within an uncertain and indifferent world, memory becomes an anchor—unstable and subjective, yet essential to the persistence of the self.\n\nThe work is situated within a speculative narrative surrounding Kai, an eighteen-year-old astronaut who leaves Earth aboard an ark-ship carrying the genetic archive of human civilization. As she travels further into an unknown and increasingly isolated universe, memories of her hometown become one of the few remaining connections between her present existence and her former identity. Rather than functioning solely as narrative material, this fictional framework provides a conceptual structure through which the work examines memory, displacement, and the construction of meaning.\n\nKyma constructs and spatializes the electronic sound environment, while the Wacom tablet provides continuous gestural control over its transformation during performance. The gestural interface shapes the real-time particle-based visual environment, allowing sound and image to evolve together in response to the performer’s actions.\n\nThe sonic materials evoke an imagined reconstruction of Kai’s hometown: the vast snowfields of Yakeshi, movement through its landscape, and the warmth of a familiar tavern containing the people and experiences she once knew. Across the eight-channel space, these materials form an immersive and continuously transforming environment in which fragments of memory can emerge, shift, disperse, and return.",
       "description_zh": "本作品以存在主义与荒谬主义为立论根基，深入探讨了在无限宇宙之中关于记忆、身份认同与坚守的议题。人类的存在本质上与记忆交织在一起；我们常渴望逃离过去，但记忆即便稍纵即逝、甚至充满欺骗性，却依然几乎无法抹去。\nKai是一名年仅18岁的宇航员，正与她的团队一同驶向无尽长夜。她肩负着延续地球文明的希望。3i-Atlas的出现，证实了外星生命的临近。为了应对这一未知文明，世界领袖们默默发射了一艘搭载着地球基因种子库的方舟舰，由四位来自不同背景的宇航员共同护航。\n在这个被孤独与沉寂所定义的宇宙中，正是那些定义了主角 Kai的记忆，将她与这段旅程紧紧羁绊在一起。我们被迫背负着来时路上的沉重回忆，去航向余生。然而，只要这些记忆永存，我们就可以面对未知宇宙那无边无际的荒谬。\n这部作品是对Kai家乡环境的声音设计，使用Kyma和Wacom进行创作及表演。视频中的背景为粒子模拟器，由四种不同的手势控制，全方位模拟了Kai的记忆锚点。行走在小镇牙克石的无尽雪原，奔向一个温暖幸福的小酒馆，那里有她熟知以及热爱的一切……",
       "featured": true,
-      "hidden": false,
-      "video": "media/Kai.mp4"
+      "hidden": false
     },
     {
       "title_en": "Take it Eazin",
       "category": "electronic",
-      "year": "2025",
+      "year": "2026",
       "media_type": "embed",
       "audio": "media/Kai_Stereo.mp3",
       "embed_url": "https://www.bilibili.com/video/BV14BG96FEk3/",
+      "cover": "media/bili-eazin.webp",
       "role_en": "Live Electronic Performance",
       "role_zh": "现场电子音乐演出",
       "description_en": "Take It Eazin is a work shaped in Ableton Live with ROLI Seaboard, Piano M, and Airwave, using touch and mid-air gesture to control pitch, timbre, and articulation. Neutone Morpho performs real-time AI timbre transfer: selected drum patterns become vocal textures, while recorded voices move toward string-like timbres. These reciprocal transformations mix the boundaries among percussion, voice, and instrumental sound. A seemingly aimless Seaboard glissando conceals a short poem about absurdity. Each letter is mapped to a pitch, and the resulting sequence is articulated through continuous gliding gestures.\nThe work was conceived during a period of profound anxiety about rapidly developing technology and the uncertainty of our human beings’ future, which gave rise to a fictional story outline. Four astronauts, led by Captain Eazin, leave Earth carrying a genetic archive into deep space, seeking a new opportunity.\nThe title is a phonetic play on take it easy. Faced with an absurd and rapidly changing world, it becomes a way of preserving agency while searching for a new human and artistic identity: we may not be able to stop the transformation, but we can learn to locate ourselves within it. Just take it easy!",
       "description_zh": "《Eazin》是一首实时交互电子音乐live，这首作品是在 Ableton Live中使用乐器ROLI Seaboard与 Airwave创作完成的，实现了对音高、音色以及手势姿态的连续精准控制。这个世界是荒谬的。这里既没有必然的意义，也没有被预承诺的终点。然而，我们依然应该选择前行，即便漫天的星辰让这份希望显得微弱不堪，即便终有一天，我们不得不独行。\n3i/atlas的出现让人类确定了外星文明的存在，各国首脑做好了两手准备，一是先报以友善态度谨慎交流，强化现有军事力量水平。二是秘密派出了一支小队，让他们带着搭载地球基因种子库的方舟舰启航宇宙，寻找新的生机。\n因为时间紧迫，宇宙航行小队注定设备简陋、人员稀少。小队由各国派遣，共四人，一个宇宙方舟。星际航行要求极高，所以纵然是举全球之力，也只能组建一支星舰，带着存有世界希望的DNA种子库航行于无尽宇宙。\nEazin是这支队伍的队长，他被选中是因为他对万事万物都抱有无尽的热爱，且思想极其活跃。在他于地球生活的短短22年里，他广泛地尝试了各种兴趣爱好。这种敏捷的变通能力，超级计算机模拟发现他应对突发事件的反应力以及决策能力处于团队首位。这首作品正是由Eazin队长委托作者创作：人生漫漫长路，若能在途中的某一刻遇见同行之人，本就是一种莫大的幸事。就连漫无目的、枯燥乏味的宇宙流浪，也不失为一种幸事",
       "featured": true,
-      "hidden": false,
-      "cover": "media/bili-eazin.webp"
+      "hidden": false
     },
     {
       "title_en": "Inspiration",
@@ -116,13 +116,13 @@
       "year": "2025",
       "media_type": "embed",
       "embed_url": "https://www.bilibili.com/video/BV1vtFKztEgb/?spm_id_from=333.337.search-card.all.click&vd_source=185c7b7fae9e6f54275a144d20a03c4d",
+      "cover": "media/captain-whiskers.jpg",
       "role_en": "Original score&Sound Design(Parts)",
       "role_zh": "原创配乐与部分声音设计",
       "description_en": "This is a relaxing, casual fishing-themed incremental game designed to help you unwind. Join Captain Cat on a journey across fishing grounds around the world, where you can catch fish, gather resources, learn new talents, increase your power, upgrade your skills, and build a collection of treasures. Spend your coins to unlock permanent upgrades across an expansive talent tree. Every voyage promises a full haul—and will leave you shouting, “Just one more run!”",
       "description_zh": "《猫船长与环球渔场》是一款捕鱼主题的增量游戏，休闲、轻松、解压。你将与猫船长一起探索环球渔场，捕获海鱼、收集资源、学习天赋、强化威能、升级技能、收集藏品，并在庞大的天赋树中使用金币解锁永久升级！每次出海都将满载而归，你将振臂高呼“再来一局”！",
       "featured": true,
-      "hidden": false,
-      "cover": "media/captain-whiskers.jpg"
+      "hidden": false
     },
     {
       "title_en": "LaCoste — Commercial Music",
