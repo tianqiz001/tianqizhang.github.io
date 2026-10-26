@@ -121,7 +121,8 @@
       "description_en": "This is a relaxing, casual fishing-themed incremental game designed to help you unwind. Join Captain Cat on a journey across fishing grounds around the world, where you can catch fish, gather resources, learn new talents, increase your power, upgrade your skills, and build a collection of treasures. Spend your coins to unlock permanent upgrades across an expansive talent tree. Every voyage promises a full haul—and will leave you shouting, “Just one more run!”",
       "description_zh": "《猫船长与环球渔场》是一款捕鱼主题的增量游戏，休闲、轻松、解压。你将与猫船长一起探索环球渔场，捕获海鱼、收集资源、学习天赋、强化威能、升级技能、收集藏品，并在庞大的天赋树中使用金币解锁永久升级！每次出海都将满载而归，你将振臂高呼“再来一局”！",
       "featured": true,
-      "hidden": false
+      "hidden": false,
+      "cover": "media/captain-whiskers.jpg"
     },
     {
       "title_en": "LaCoste — Commercial Music",
