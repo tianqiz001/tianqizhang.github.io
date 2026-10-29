@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Sans:wght@400..600&family=Martian+Mono:wdth,wght@75..112.5,300..500&family=Noto+Sans+SC:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=Noto+Serif+SC:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=20261025spec">
+<link rel="stylesheet" href="assets/style.css?v=20261029ab">
 </head>
 <body>
 
@@ -19,8 +19,8 @@
     <nav class="topbar" aria-label="Main">
       <a class="mark" href="#top">M/TZ</a>
       <ul class="nav">
-        <li><a href="#work" data-i18n="nav.work">Work</a></li>
         <li><a href="#about" data-i18n="nav.about">About</a></li>
+        <li><a href="#work" data-i18n="nav.work">Work</a></li>
         <li><a href="#activity" data-i18n="nav.activity">Activity</a></li>
         <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
       </ul>
@@ -115,22 +115,6 @@
 </header>
 
 <main>
-  <section class="work" id="work" aria-labelledby="workHeading">
-    <div class="wrap work-grid">
-      <div class="work-head">
-        <div class="work-head-text">
-          <p class="label sec-title"><span id="workHeading" data-i18n="work.label">Selected work</span></p>
-          <p class="intro" data-site="intro"></p>
-        </div>
-        <div class="work-head-tools">
-          <div class="filters" id="filters" role="group" aria-label="Filter work"></div>
-          <p class="side-note label" data-i18n="work.note">Click a window to listen or watch.</p>
-        </div>
-      </div>
-      <div class="windows" id="windows"></div>
-    </div>
-  </section>
-
   <section class="about" id="about" aria-labelledby="aboutHeading">
     <div class="wrap about-grid">
       <div class="about-side">
@@ -145,6 +129,22 @@
         </figure>
       </div>
       <div class="about-text" id="aboutText"></div>
+    </div>
+  </section>
+
+  <section class="work" id="work" aria-labelledby="workHeading">
+    <div class="wrap work-grid">
+      <div class="work-head">
+        <div class="work-head-text">
+          <p class="label sec-title"><span id="workHeading" data-i18n="work.label">Selected work</span></p>
+          <p class="intro" data-site="intro"></p>
+        </div>
+        <div class="work-head-tools">
+          <div class="filters" id="filters" role="group" aria-label="Filter work"></div>
+          <p class="side-note label" data-i18n="work.note">Click a window to listen or watch.</p>
+        </div>
+      </div>
+      <div class="windows" id="windows"></div>
     </div>
   </section>
 
@@ -218,6 +218,6 @@
   </div>
 </div>
 
-<script src="assets/app.js?v=20261026a" defer></script>
+<script src="assets/app.js?v=20261029ab" defer></script>
 </body>
 </html>

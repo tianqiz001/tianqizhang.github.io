@@ -326,6 +326,7 @@ html[lang^="zh"] .label.sec-title {
   background: var(--paper);
   padding-block: clamp(48px, 8vw, 112px);
 }
+.about + .work { border-top: 1px solid var(--rule); padding-top: clamp(44px, 6.5vw, 92px); }
 .work-grid {
   display: grid;
   gap: clamp(24px, 3vw, 44px);
@@ -469,7 +470,7 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
 
 /* ───────── ABOUT ───────── */
 .about {
-  border-top: 1px solid var(--rule);
+  background: var(--paper);
   padding-block: clamp(56px, 9vw, 128px);
 }
 .about-grid {
