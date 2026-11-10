@@ -17,7 +17,7 @@
       'sound.off': 'Sound off', 'sound.on': 'Sound on',
       'hero.hint': 'Turn sound on, then move across the name: left–right pans, up–down sets the frequency, moving faster adds modulation.',
       'hero.scroll': 'Scroll for work ↓',
-      'work.label': 'Selected work', 'work.note': 'Click a window to listen or watch.',
+      'work.label': 'Selected work', 'work.note': 'Click a window to open the work.',
       'work.all': 'All', 'work.empty': 'Nothing in this category yet.',
       'work.error': 'The work list could not be loaded. If you opened index.html by double-clicking it, start a local server instead (see README).',
       'about.label': 'About me', 'about.cv': 'Selected activity',
@@ -25,7 +25,7 @@
       'contact.label': 'Contact', 'contact.lead': 'For film and media scoring, commissions and collaborations.',
       'contact.copy': 'Copy email', 'contact.copied': 'Copied',
       'foot.top': 'Back to top ↑', 'localTime': 'Local time',
-      'type.audio': 'Listen', 'type.video': 'Watch', 'type.embed': 'Watch', 'type.none': 'Open',
+      'type.audio': 'Listen', 'type.video': 'Watch', 'type.embed': 'Watch', 'type.none': 'Read',
       'player.play': 'Play', 'player.pause': 'Pause', 'player.close': 'Close player',
       'more': 'More ↗',
       'media.error': 'This file could not be played. It may be missing or still uploading.',
@@ -36,7 +36,7 @@
       'sound.off': '声音 关', 'sound.on': '声音 开',
       'hero.hint': '打开声音，在名字上移动鼠标：左右控制声像，上下控制频率，移动得越快调制越强。',
       'hero.scroll': '向下查看作品 ↓',
-      'work.label': '作品精选', 'work.note': '点击小窗即可试听或观看。',
+      'work.label': '作品精选', 'work.note': '点击小窗进入作品页面。',
       'work.all': '全部', 'work.empty': '这个类别暂时还没有作品。',
       'work.error': '作品列表加载失败。如果你是直接双击打开 index.html，请改用本地服务器预览（见 README）。',
       'about.label': '关于我', 'about.cv': '经历',
@@ -44,7 +44,7 @@
       'contact.label': '联系', 'contact.lead': '影视与媒体配乐、委约创作及合作，欢迎来信。',
       'contact.copy': '复制邮箱', 'contact.copied': '已复制',
       'foot.top': '回到顶部 ↑', 'localTime': '当地时间',
-      'type.audio': '试听', 'type.video': '观看', 'type.embed': '观看', 'type.none': '打开',
+      'type.audio': '试听', 'type.video': '观看', 'type.embed': '观看', 'type.none': '阅读',
       'player.play': '播放', 'player.pause': '暂停', 'player.close': '关闭播放器',
       'more': '更多 ↗',
       'media.error': '这个文件无法播放，可能是文件缺失或还没有上传成功。',
@@ -93,7 +93,18 @@
     if (/^(https?:)?\/\//.test(p) || p.startsWith('data:')) return p;
     return p.replace(/^\/+/, '');            // keep paths relative so the site works in a sub-folder
   };
-  const slug = (s) => String(s || 'untitled').toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').slice(0, 40) || 'untitled';
+  const slug = (s) => String(s || 'untitled').toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').slice(0, 40) || 'untitled';
+  /* each work gets its own page: work.html?w=<slug> (same rule in work.js) */
+  function assignSlugs(list) {
+    const seen = new Map();
+    list.forEach((w) => {
+      let s = slug(w.slug || w.title_en || w.title_zh);
+      const n = (seen.get(s) || 0) + 1; seen.set(s, n);
+      if (n > 1) s = `${s}-${n}`;
+      w._slug = s;
+    });
+  }
+  const pageOf = (w) => `work.html?w=${encodeURIComponent(w._slug)}`;
   const basename = (p) => (p || '').split('/').pop();
   const fmtTime = (s) => (!isFinite(s) || s < 0) ? '0:00' : `${Math.floor(s / 60)}:${pad(Math.floor(s % 60))}`;
 
@@ -620,21 +631,19 @@
     const icon = typeKey === 'audio' || kind === 'none'
       ? '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>'
       : '<svg viewBox="0 0 24 24"><path d="M3 6h13v12H3zM17 10l4-2.5v9L17 14z"/></svg>';
-    const hasAction = kind !== 'none' || w.link;
-    const viewTag = hasAction ? 'button type="button"' : 'div';
-    const viewClose = hasAction ? 'button' : 'div';
+    const href = esc(pageOf(w));
     return `
       <article class="win${w.featured ? ' featured' : ''}${playingId === w._id ? ' playing' : ''}${playingId === w._id && audio.paused ? ' paused' : ''}" data-id="${w._id}" style="--i:${idx};--u:${units};--U:${rowUnits}">
         <div class="win-bar">
           <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="win-file">${esc(file)}</span>
         </div>
-        <${viewTag} class="win-view" ${hasAction ? `aria-label="${esc(t('type.' + typeKey))}: ${esc(title)}"` : ''}>
+        <a class="win-view" href="${href}" aria-label="${esc(title)}">
           ${cover}
-          ${hasAction ? `<span class="win-play">${icon}<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${esc(t('type.' + typeKey))}</span>` : ''}
-        </${viewClose}>
+          <span class="win-play">${icon}<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${esc(t('type.' + typeKey))}</span>
+        </a>
         <div class="win-cap">
-          <h3>${esc(title)}</h3>
+          <h3><a class="win-title" href="${href}">${esc(title)}</a></h3>
           ${meta ? `<p class="win-role label">${esc(meta)}</p>` : ''}
           ${desc ? `<p class="win-desc">${esc(desc)}</p>` : ''}
           ${w.link ? `<a class="win-link" href="${esc(w.link)}" target="_blank" rel="noopener">${esc(t('more'))}</a>` : ''}
@@ -677,11 +686,11 @@
     renderFilters(); renderWorks();
   });
   $('#windows').addEventListener('click', (e) => {
-    const view = e.target.closest('button.win-view');
-    if (!view) return;
-    const id = view.closest('.win').dataset.id;
-    const w = works.find((x) => x._id === id);
-    if (w) openWork(w);
+    /* a card is a link to the work's own page; the whole card is clickable */
+    if (e.target.closest('a')) return;
+    const card = e.target.closest('.win');
+    const w = card && works.find((x) => x._id === card.dataset.id);
+    if (w) location.href = pageOf(w);
   });
 
   function figOf(w) { return (CATS[w.category] && CATS[w.category][lang]) || ''; }
@@ -1331,6 +1340,7 @@
       const [s, w] = await Promise.all([getJSON('content/site.json'), getJSON('content/works.json')]);
       site = s || {};
       const list = Array.isArray(w) ? w : (w && w.works) || [];
+      assignSlugs(list);
       works = list.map((x, i) => ({ ...x, _id: `w${i}` }));
     } catch (err) {
       console.error(err);

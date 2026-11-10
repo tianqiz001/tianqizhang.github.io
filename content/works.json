@@ -15,7 +15,17 @@
       "description_en": "Kai is an audiovisual work for eight-channel spatial audio and real-time visuals, created in Kyma and performed through a Wacom tablet as a gestural interface. Grounded in existentialism and absurdism, the work explores memory, identity, and persistence, considering memory not simply as a record of the past but as a process through which personal identity and meaning are continuously reconstructed. Within an uncertain and indifferent world, memory becomes an anchor—unstable and subjective, yet essential to the persistence of the self.\n\nThe work is situated within a speculative narrative surrounding Kai, an eighteen-year-old astronaut who leaves Earth aboard an ark-ship carrying the genetic archive of human civilization. As she travels further into an unknown and increasingly isolated universe, memories of her hometown become one of the few remaining connections between her present existence and her former identity. Rather than functioning solely as narrative material, this fictional framework provides a conceptual structure through which the work examines memory, displacement, and the construction of meaning.\n\nKyma constructs and spatializes the electronic sound environment, while the Wacom tablet provides continuous gestural control over its transformation during performance. The gestural interface shapes the real-time particle-based visual environment, allowing sound and image to evolve together in response to the performer’s actions.\n\nThe sonic materials evoke an imagined reconstruction of Kai’s hometown: the vast snowfields of Yakeshi, movement through its landscape, and the warmth of a familiar tavern containing the people and experiences she once knew. Across the eight-channel space, these materials form an immersive and continuously transforming environment in which fragments of memory can emerge, shift, disperse, and return.",
       "description_zh": "本作品以存在主义与荒谬主义为立论根基，深入探讨了在无限宇宙之中关于记忆、身份认同与坚守的议题。人类的存在本质上与记忆交织在一起；我们常渴望逃离过去，但记忆即便稍纵即逝、甚至充满欺骗性，却依然几乎无法抹去。\nKai是一名年仅18岁的宇航员，正与她的团队一同驶向无尽长夜。她肩负着延续地球文明的希望。3i-Atlas的出现，证实了外星生命的临近。为了应对这一未知文明，世界领袖们默默发射了一艘搭载着地球基因种子库的方舟舰，由四位来自不同背景的宇航员共同护航。\n在这个被孤独与沉寂所定义的宇宙中，正是那些定义了主角 Kai的记忆，将她与这段旅程紧紧羁绊在一起。我们被迫背负着来时路上的沉重回忆，去航向余生。然而，只要这些记忆永存，我们就可以面对未知宇宙那无边无际的荒谬。\n这部作品是对Kai家乡环境的声音设计，使用Kyma和Wacom进行创作及表演。视频中的背景为粒子模拟器，由四种不同的手势控制，全方位模拟了Kai的记忆锚点。行走在小镇牙克石的无尽雪原，奔向一个温暖幸福的小酒馆，那里有她熟知以及热爱的一切……",
       "featured": true,
-      "hidden": false
+      "hidden": false,
+      "medium_en": "8-channel spatial audio and real-time visuals · Kyma, Wacom tablet",
+      "medium_zh": "八声道空间音频与实时影像 · Kyma、Wacom 数位板",
+      "performances": [
+        {
+          "date": "Sep 2026",
+          "event_en": "Seoul International Computer Music Festival (SICMF) · selected work",
+          "event_zh": "首尔国际计算机音乐节（SICMF）· 入选作品",
+          "venue": "Seoul, South Korea"
+        }
+      ]
     },
     {
       "title_en": "Take it Eazin",
@@ -179,10 +189,22 @@
       "cover": "media/i-see-the-moon.jpg",
       "role_en": "Electroacoustic · fixed media",
       "role_zh": "电子原声 · 固定媒体",
-      "description_en": "An electroacoustic reflection on silent love and unseen companionship. It begins from the thought that the most painful thing would be to see the bright moon shine for everyone but never for oneself, and arrives at the idea that simply living beneath the moon each night is already a quiet kind of happiness. The piece weaves together granulated recordings of my own voice with the sound of prayer beads bought at Yuelu Mountain.\n\nPremiered at Cinema for the Ears, Fall 2025 Concert 1 (CECM, Indiana University), November 3, 2025, Ford-Crawford Hall.",
-      "description_zh": "一首关于沉默的爱与看不见的陪伴的电子原声作品。它从这样一个念头出发：最痛苦的，莫过于看见明月照耀着所有人，却唯独不照向自己；而最终想到，每个夜晚能活在月光之下，本身就已经是一种安静的幸福。作品把我自己声音的粒子化录音，与在岳麓山买的佛珠的声音交织在一起。\n\n首演于印第安纳大学 CECM「Cinema for the Ears」2025 秋季第一场音乐会，2025 年 11 月 3 日，Ford-Crawford Hall。",
+      "description_en": "An electroacoustic reflection on silent love and unseen companionship, woven from granulated recordings of my own voice and the sound of prayer beads bought at Yuelu Mountain.",
+      "description_zh": "一首关于沉默的爱与看不见的陪伴的电子原声作品，由我自己声音的粒子化录音和在岳麓山买的佛珠的声音交织而成。",
       "featured": false,
-      "hidden": false
+      "hidden": false,
+      "program_note_en": "I see the Moon is an electroacoustic reflection on silent love and unseen companionship. It begins with a simple thought: the most painful thing in the world is to see the bright moon shining for everyone — but never for me. But to see the moon each night, to live beneath its gentle light, is already a quiet kind of happiness.\nThe piece weaves together recordings of my own voice, transformed through a granulator, and the gentle sound of prayer beads bought at Yuelu Mountain.",
+      "program_note_zh": "《I See the Moon》是一首关于沉默的爱与看不见的陪伴的电子原声作品。它从一个简单的念头出发：世界上最痛苦的事，莫过于看见明月照耀着所有人，却唯独不照向我。可是，每个夜晚都能看见月亮，活在它温柔的光下，本身就已经是一种安静的幸福。\n作品把我自己的声音录音经过粒子合成器（granulator）处理后，与在岳麓山买的佛珠轻轻碰撞的声音交织在一起。",
+      "medium_en": "Fixed media, quadraphonic",
+      "medium_zh": "固定媒体，四声道",
+      "performances": [
+        {
+          "date": "2025-11-03",
+          "event_en": "Cinema for the Ears, Fall 2025 Concert 1 (premiere)",
+          "event_zh": "「Cinema for the Ears」2025 秋季第一场音乐会（首演）",
+          "venue": "Ford-Crawford Hall, Jacobs School of Music, Indiana University"
+        }
+      ]
     },
     {
       "title_en": "New York Times",

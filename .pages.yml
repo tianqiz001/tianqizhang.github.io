@@ -97,9 +97,58 @@ content:
           - name: description_zh
             label: "简介（中文）"
             type: text
+          - name: program_note_en
+            label: "Program note (English, optional)"
+            type: text
+            description: "Full note shown on the work's own page. Leave empty to show the description there instead. Each new line starts a new paragraph."
+          - name: program_note_zh
+            label: "作品说明 / Program note（中文，可选）"
+            type: text
+            description: "显示在作品详情页。留空的话，详情页会显示上面的简介。每换一行就是一个新段落。"
+          - name: medium_en
+            label: "Medium / instrumentation (English, optional)"
+            type: string
+            description: "e.g. Fixed media, quadraphonic · 8-channel audio and real-time visuals"
+          - name: medium_zh
+            label: "媒介 / 编制（中文，可选）"
+            type: string
+            description: "例如：固定媒体，四声道"
+          - name: performances
+            label: "Performances & screenings / 演出与放映"
+            type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{fields.date} · {fields.event_en}"
+            fields:
+              - name: date
+                label: "Date / 日期"
+                type: string
+                description: "e.g. 2025-11-03 or Sep 2026"
+              - name: event_en
+                label: "Event (English)"
+                type: string
+              - name: event_zh
+                label: "活动名称（中文）"
+                type: string
+              - name: venue
+                label: "Venue / 地点"
+                type: string
+          - name: credits_en
+            label: "Credits (English, optional)"
+            type: text
+            description: "One credit per line, e.g. Director: Colin Stanton"
+          - name: credits_zh
+            label: "创作人员（中文，可选）"
+            type: text
+            description: "每行一条，例如：导演：Colin Stanton"
           - name: link
             label: "External link / 外部链接 (optional)"
             type: string
+          - name: slug
+            label: "Page address / 页面地址 (optional)"
+            type: string
+            description: "The work page lives at work.html?w=<this>. Leave empty to make it from the English title. Fill it in if you rename the work but want the old address to keep working. 留空则用英文标题自动生成。"
           - name: featured
             label: "Featured (large window) / 大窗展示"
             type: boolean
