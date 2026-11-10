@@ -258,14 +258,27 @@
     lfo.connect(lfoDepth).connect(trem.gain); lfo.start();
     const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; lp.Q.value = 0.9;
     const pan = actx.createStereoPanner ? actx.createStereoPanner() : null;
-    trem.connect(lp);
-    if (pan) lp.connect(pan).connect(scBus); else lp.connect(scBus);
-    theremin = { sc: true, input: trem, trem, lfoDepth, lp, pan, freq: 20000, panV: 0, modV: 0, mod: 0 };
+    // two paths: dry (the untouched track, used whenever the pointer is off the name) and the effect chain
+    const input = actx.createGain();
+    const dry = actx.createGain(); dry.gain.value = 1;
+    const wet = actx.createGain(); wet.gain.value = 0;
+    input.connect(dry).connect(scBus);
+    input.connect(trem); trem.connect(lp);
+    (pan ? lp.connect(pan) : lp).connect(wet).connect(scBus);
+    theremin = { sc: true, input, dry, wet, trem, lfoDepth, lp, pan, freq: 20000, panV: 0, modV: 0, mod: 0, wasActive: false };
   }
   let modTimer = 0;
   function thereminUpdate(nx, ny, active, speed = 0) {
     if (!theremin) return;
     const T = theremin, now = actx.currentTime;
+    // off the name: straight back to the original track, no effect at all
+    T.dry.gain.setTargetAtTime(active ? 0 : 1, now, 0.06);
+    T.wet.gain.setTargetAtTime(active ? 1 : 0, now, 0.06);
+    if (active && !T.wasActive) {   // jump the chain to the pointer before it fades in, so nothing sweeps
+      if (T.pan) T.pan.pan.setValueAtTime(nx * 2 - 1, now);
+      T.lp.frequency.setValueAtTime(20000 * Math.pow(350 / 20000, Math.pow(ny, 1.4)), now);
+    }
+    T.wasActive = active;
     const panV = active ? nx * 2 - 1 : 0;
     const cutoff = active ? 20000 * Math.pow(350 / 20000, Math.pow(ny, 1.4)) : 20000;
     const mod = active ? Math.min(1, speed / 2.5) : 0;
