@@ -15,7 +15,7 @@
     en: {
       'nav.work': 'Work', 'nav.about': 'About', 'nav.activity': 'Activity', 'nav.contact': 'Contact',
       'sound.off': 'Sound off', 'sound.on': 'Sound on',
-      'hero.hint': 'Turn sound on, then move across the name: left–right pans, up–down sets the frequency, moving faster adds modulation.',
+      'hero.hint': 'Turn sound on, then move across the name: left–right pans, up–down sets the filter, moving faster adds modulation. Press the pets to add layers.',
       'hero.scroll': 'Scroll for work ↓',
       'work.label': 'Selected work', 'work.note': 'Click a window to open the work.',
       'work.all': 'All', 'work.empty': 'Nothing in this category yet.',
@@ -34,7 +34,7 @@
     zh: {
       'nav.work': '作品', 'nav.about': '关于', 'nav.activity': '经历', 'nav.contact': '联系',
       'sound.off': '声音 关', 'sound.on': '声音 开',
-      'hero.hint': '打开声音，在名字上移动鼠标：左右控制声像，上下控制频率，移动得越快调制越强。',
+      'hero.hint': '打开声音，在名字上移动鼠标：左右控制声像，上下控制滤波频率，移动得越快调制越强。点一下小动物，可以叠加新的声部。',
       'hero.scroll': '向下查看作品 ↓',
       'work.label': '作品精选', 'work.note': '点击小窗进入作品页面。',
       'work.all': '全部', 'work.empty': '这个类别暂时还没有作品。',
@@ -193,71 +193,90 @@
     } catch (e) { routed = false; }
   }
 
-  // The name is playable with Mercu's SuperCollider patch (Ndef \sound2, LatoocarfianC),
-  // ported to an AudioWorklet: x = pan, y = frequency, pointer speed = modulation.
-  // Browsers without AudioWorklet fall back to the small pentatonic theremin below.
-  let scBuilding = false;
-  async function buildTheremin() {
-    if (theremin || scBuilding || !ensureCtx()) return;
-    if (actx.audioWorklet && window.AudioWorkletNode) {
-      scBuilding = true;
-      try {
-        await actx.audioWorklet.addModule('assets/synths/latoocarfian.worklet.js?v=20261023a');
-        const node = new AudioWorkletNode(actx, 'mercu-sound2', { numberOfInputs: 0, outputChannelCount: [2] });
-        node.connect(scBus);
-        const P = (n) => node.parameters.get(n);
-        theremin = { sc: true, node, gate: P('gate'), pan: P('pan'), freqMul: P('freqMul'), mod: P('mod'), freq: 8050, panV: 0, modV: 0 };
-        scBuilding = false;
-        thereminUpdate(ptr.nx, ptr.ny, ptr.active);
-        return;
-      } catch (e) { scBuilding = false; }
-    }
-    buildFallbackTheremin();
+  /* ───────── Mercu's music layers ─────────
+     BGM1 loops underneath while sound is on. Over the name, the pointer plays it like an instrument:
+     x = pan, y = low-pass frequency (top = open), pointer speed = tremolo depth. Leaving the name
+     glides everything back to neutral. Each pet, when pressed, adds its own track (3 s fade-in);
+     the layers keep playing until the sound toggle is switched off. All of it runs through scBus,
+     which ducks to silence while a work is playing. */
+  const SOUND_V = '20261110';
+  const TRACKS = {
+    bgm: 'media/sound/bgm1.mp3',
+    sunny: 'media/sound/sunny-explosion.mp3',
+    bear: 'media/sound/bear-cardgame.mp3',
+    ubai: 'media/sound/ubai-bgm2.mp3',
+    kylin: 'media/sound/kylin-dual-high.mp3',
+  };
+  const BGM_LEVEL = 0.7, PET_LEVEL = 0.42, FADE_IN = 3;
+  const layers = {};   // name → { el, gain }
+  function layer(name) {
+    if (layers[name] || !ensureCtx()) return layers[name];
+    const el = new Audio(`${TRACKS[name]}?v=${SOUND_V}`);
+    el.loop = true; el.preload = 'auto';
+    const gain = actx.createGain(); gain.gain.value = 0;
+    actx.createMediaElementSource(el).connect(gain);
+    layers[name] = { el, gain, on: false };
+    return layers[name];
   }
-  const PENTA = [0, 3, 5, 7, 10];
-  function buildFallbackTheremin() {
+  function fadeTo(param, target, secs) {   // sine-shaped, like an Ndef fade; stays cancellable
+    const now = actx.currentTime, from = param.value;
+    param.cancelScheduledValues(now); param.setValueAtTime(from, now);
+    const N = 24;
+    for (let i = 1; i <= N; i++) param.linearRampToValueAtTime(from + (target - from) * Math.sin((i / N) * Math.PI / 2), now + secs * i / N);
+  }
+  function startLayer(name, level, dest) {
+    const L = layer(name);
+    if (!L || L.on) return;
+    if (!L.wired) { L.gain.connect(dest); L.wired = true; }
+    L.on = true;
+    const p = L.el.play(); if (p && p.catch) p.catch(() => {});
+    fadeTo(L.gain.gain, level, FADE_IN);
+  }
+  function stopAllLayers() {
+    Object.values(layers).forEach((L) => {
+      if (!L.on) return;
+      L.on = false;
+      fadeTo(L.gain.gain, 0, 0.25);
+      setTimeout(() => { if (!L.on) L.el.pause(); }, 400);
+    });
+  }
+
+  // BGM1 instrument chain: source → tremolo → low-pass → pan → scBus
+  function buildTheremin() {
     if (theremin || !ensureCtx()) return;
-    const o1 = actx.createOscillator(); o1.type = 'triangle';
-    const o2 = actx.createOscillator(); o2.type = 'sine';
-    const o2g = actx.createGain(); o2g.gain.value = 0.25;
-    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1600; lp.Q.value = 0.7;
-    const vca = actx.createGain(); vca.gain.value = 0;
-    const delay = actx.createDelay(1); delay.delayTime.value = 0.31;
-    const fb = actx.createGain(); fb.gain.value = 0.32;
-    const wet = actx.createGain(); wet.gain.value = 0.28;
-    o1.connect(lp); o2.connect(o2g).connect(lp); lp.connect(vca);
-    vca.connect(scBus); vca.connect(delay); delay.connect(fb).connect(delay); delay.connect(wet).connect(scBus);
-    o1.start(); o2.start();
-    theremin = { o1, o2, vca, lp, freq: 220 };
+    const L = layer('bgm');
+    const trem = actx.createGain();
+    const lfo = actx.createOscillator(); lfo.frequency.value = 6.5;
+    const lfoDepth = actx.createGain(); lfoDepth.gain.value = 0;
+    lfo.connect(lfoDepth).connect(trem.gain); lfo.start();
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; lp.Q.value = 0.9;
+    const pan = actx.createStereoPanner ? actx.createStereoPanner() : null;
+    L.gain.connect(trem); trem.connect(lp);
+    if (pan) lp.connect(pan).connect(scBus); else lp.connect(scBus);
+    L.wired = true;
+    theremin = { sc: true, trem, lfoDepth, lp, pan, freq: 20000, panV: 0, modV: 0, mod: 0 };
   }
   let modTimer = 0;
   function thereminUpdate(nx, ny, active, speed = 0) {
     if (!theremin) return;
-    const now = actx.currentTime;
-    if (theremin.sc) {
-      const pan = nx * 2 - 1;                              // left … right
-      const mul = Math.pow(2, (0.5 - ny) * 3.2);           // centre = original 8050 / 9000 Hz, ±1.6 oct
-      const mod = Math.min(1, speed / 2.5);                // speed in hero-widths per second
-      theremin.pan.setValueAtTime(pan, now);
-      theremin.freqMul.setValueAtTime(mul, now);
-      theremin.mod.setValueAtTime(mod, now);
-      theremin.gate.setValueAtTime(active && soundOn ? 1 : 0, now);
-      theremin.freq = 8050 * mul; theremin.panV = pan;
-      theremin.modV = Math.max(mod, theremin.modV * 0.85);
-      clearTimeout(modTimer);
-      if (mod > 0) modTimer = setTimeout(() => { if (theremin) { theremin.mod.setValueAtTime(0, actx.currentTime); } }, 70);
-      return;
-    }
-    const steps = PENTA.length * 3;
-    const idx = Math.min(steps, Math.max(0, Math.floor(nx * (steps + 1))));
-    const semis = Math.floor(idx / PENTA.length) * 12 + PENTA[idx % PENTA.length];
-    const freq = 110 * Math.pow(2, semis / 12);
-    theremin.freq = freq;
-    theremin.o1.frequency.setTargetAtTime(freq, now, 0.025);
-    theremin.o2.frequency.setTargetAtTime(freq * 2, now, 0.025);
-    theremin.lp.frequency.setTargetAtTime(700 + (1 - ny) * 2400, now, 0.05);
-    const g = active && soundOn ? 0.05 + (1 - ny) * 0.11 : 0;
-    theremin.vca.gain.setTargetAtTime(g, now, active ? 0.04 : 0.18);
+    const T = theremin, now = actx.currentTime;
+    const panV = active ? nx * 2 - 1 : 0;
+    const cutoff = active ? 20000 * Math.pow(350 / 20000, Math.pow(ny, 1.4)) : 20000;
+    const mod = active ? Math.min(1, speed / 2.5) : 0;
+    if (T.pan) T.pan.pan.setTargetAtTime(panV, now, active ? 0.03 : 0.4);
+    T.lp.frequency.setTargetAtTime(cutoff, now, active ? 0.04 : 0.4);
+    // tremolo: gain swings 1 ± depth/2 around 1 - depth/2 so peaks never exceed the dry level
+    T.mod = Math.max(mod, T.mod * 0.6);
+    T.trem.gain.setTargetAtTime(1 - T.mod * 0.45, now, 0.05);
+    T.lfoDepth.gain.setTargetAtTime(T.mod * 0.45, now, 0.05);
+    T.freq = cutoff; T.panV = panV; T.modV = Math.max(mod, T.modV * 0.85);
+    clearTimeout(modTimer);
+    if (mod > 0) modTimer = setTimeout(() => {   // pointer stopped: the tremolo rings out over ~0.6 s
+      if (!theremin) return;
+      T.mod = 0;
+      T.trem.gain.setTargetAtTime(1, actx.currentTime, 0.2);
+      T.lfoDepth.gain.setTargetAtTime(0, actx.currentTime, 0.2);
+    }, 80);
   }
 
   /* ───────── giant name ───────── */
@@ -333,54 +352,35 @@
   hero.addEventListener('pointerleave', () => { ptr.active = false; if (soundOn) thereminUpdate(ptr.nx, ptr.ny, false); });
   hero.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') { ptr.active = false; thereminUpdate(ptr.nx, ptr.ny, false); } });
 
-  /* pet layers: hovering a pet starts its Ndef (3 s fade-in); the layers stack up and keep playing
-     anywhere on the page until the sound toggle is switched off. */
-  const PET_SYNTH = { ubai: 'mercu-drum', kylin: 'mercu-kylin', bear: 'mercu-bear', sunny: 'mercu-beep' };
-  const PET_LEVEL = 0.45;   // overall level of the pet layers (≈ -7 dB)
-  let petBus = null, petNodes = null, petBuilding = null;
-  const petsOn = new Set();
-  function buildPets() {
-    if (petNodes || petBuilding || !ensureCtx() || !actx.audioWorklet) return petBuilding;
-    petBuilding = actx.audioWorklet.addModule('assets/synths/pets.worklet.js?v=20261023c').then(() => {
-      petBus = actx.createGain();
-      petBus.gain.value = PET_LEVEL;
-      const safety = actx.createDynamicsCompressor();   // the layers sum hot (the drum alone peaks ~0.64)
-      safety.threshold.value = -3; safety.knee.value = 3; safety.ratio.value = 20; safety.attack.value = 0.002; safety.release.value = 0.2;
-      petBus.connect(safety).connect(scBus);
-      petNodes = {};
-      for (const [pet, name] of Object.entries(PET_SYNTH)) {
-        const n = new AudioWorkletNode(actx, name, { numberOfInputs: 0, outputChannelCount: [2] });
-        n.connect(petBus);
-        petNodes[pet] = n;
-      }
-      petsOn.forEach((p) => setPetGate(p, 1));
-    }).catch(() => { petBuilding = null; });
-    return petBuilding;
+  /* pets: pressing one adds its track to the stack */
+  let petBus = null;
+  function ensurePetBus() {
+    if (petBus || !ensureCtx()) return petBus;
+    petBus = actx.createGain(); petBus.gain.value = 1;
+    const safety = actx.createDynamicsCompressor();   // several mastered tracks at once sum hot
+    safety.threshold.value = -6; safety.knee.value = 4; safety.ratio.value = 12; safety.attack.value = 0.003; safety.release.value = 0.25;
+    petBus.connect(safety).connect(scBus);
+    return petBus;
   }
-  function setPetGate(pet, v) {
-    const n = petNodes && petNodes[pet];
-    if (n) n.parameters.get('gate').setValueAtTime(v, actx.currentTime);
-  }
-  function petEnter(pet) {
-    if (!soundOn || !PET_SYNTH[pet]) return;
-    petsOn.add(pet);
-    buildPets();
-    setPetGate(pet, 1);
+  function petPress(pet) {
+    if (!soundOn || !TRACKS[pet]) return;
+    startLayer(pet, PET_LEVEL, ensurePetBus());
   }
   $$('.pet').forEach((el) => {
     const pet = (el.className.match(/pet-(ubai|kylin|bear|sunny)/) || [])[1];
-    el.addEventListener('pointerenter', () => petEnter(pet));
-    el.addEventListener('pointerup', () => petEnter(pet));
-    el.addEventListener('focus', () => petEnter(pet));
+    el.addEventListener('click', () => petPress(pet));
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') petPress(pet); });
   });
 
   $('#soundToggle').addEventListener('click', () => {
     soundOn = !soundOn;
-    if (soundOn) { ensureCtx(); buildTheremin(); buildPets(); if (petBus) petBus.gain.setTargetAtTime(PET_LEVEL, actx.currentTime, 0.05); }
-    else {
-      if (theremin) thereminUpdate(ptr.nx, ptr.ny, false);
-      if (petBus) petBus.gain.setTargetAtTime(0, actx.currentTime, 0.08);
-      petsOn.forEach((p) => setPetGate(p, 0)); petsOn.clear();
+    if (soundOn) {
+      ensureCtx(); buildTheremin();
+      startLayer('bgm', BGM_LEVEL, scBus);
+      thereminUpdate(ptr.nx, ptr.ny, ptr.active);
+      ['sunny', 'bear', 'ubai', 'kylin'].forEach((p) => layer(p));   // start buffering the pet tracks
+    } else {
+      stopAllLayers();
     }
     $('#soundToggle').setAttribute('aria-pressed', String(soundOn));
     $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
@@ -463,7 +463,7 @@
       const panTxt = (v) => Math.abs(v) < 0.02 ? 'C' : `${v < 0 ? 'L' : 'R'}${Math.round(Math.abs(v) * 100)}`;
       const txt = soundOn && theremin
         ? (theremin.sc
-          ? `PAN ${panTxt(theremin.panV)} · ${Math.round(theremin.freq)} HZ · MOD ${Math.round(theremin.modV * 100)}%`
+          ? `PAN ${panTxt(theremin.panV)} · LPF ${theremin.freq >= 19500 ? 'OPEN' : Math.round(theremin.freq) + ' HZ'} · MOD ${Math.round(theremin.modV * 100)}%`
           : `${theremin.freq.toFixed(1)} HZ · ${Math.round((1 - ptr.ny) * 100)}%`)
         : `X ${ptr.nx.toFixed(2)}  Y ${(1 - ptr.ny).toFixed(2)}`;
       const tx = Math.min(x + 10 * d, W - heroCtx.measureText(txt).width - 8 * d);
