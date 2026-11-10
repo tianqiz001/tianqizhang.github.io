@@ -21,7 +21,7 @@
       'nav.work': '作品', 'nav.about': '关于', 'nav.activity': '经历', 'nav.contact': '联系',
       'wp.back': '← 全部作品', 'wp.year': '年份', 'wp.role': '角色', 'wp.cat': '类别',
       'wp.media': '媒介', 'wp.note': '作品说明', 'wp.perf': '演出与放映',
-      'wp.credits': '创作人员', 'wp.link': '更多', 'wp.prev': '上一个', 'wp.next': '下一个',
+      'wp.credits': '创作人员', 'wp.link': '链接', 'wp.prev': '上一个', 'wp.next': '下一个',
       'wp.missing': '没有找到这个作品。', 'wp.error': '作品列表加载失败。',
       'openOn': '在新窗口打开：', 'media.error': '这个文件无法播放，可能是文件缺失或还没有上传成功。',
       'm.audio': '音频', 'm.video': '视频'
@@ -133,6 +133,15 @@
     }
     fillOpenLink();
   }
+  function heroBg() {
+    const w = work;
+    const cover = w.cover ? mediaUrl(w.cover) : (w.embed_url && (parseEmbed(w.embed_url) || {}).thumb) || '';
+    const bg = $('#wpHeroBg');
+    if (!cover) return;
+    const img = new Image();
+    img.onload = () => { bg.style.backgroundImage = `url("${cover}")`; bg.classList.add('on'); };
+    img.src = cover;
+  }
   function fillOpenLink() {
     const open = $('#wpOpen');
     if (open.dataset.host) open.textContent = `${t('openOn')} ${open.dataset.host} ↗`;
@@ -169,8 +178,8 @@
       ['wp.cat', cat],
       ['wp.media', f(w, 'medium') || mediaWord]
     ].filter((r) => r[1]);
-    $('#wpMeta').innerHTML = `<dl class="wp-dl">${rows.map(([k, v]) => `<div><dt class="label">${esc(t(k))}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
-      ${w.link ? `<a class="wp-ext label" href="${esc(w.link)}" target="_blank" rel="noopener">${esc(t('wp.link'))} ↗</a>` : ''}`;
+    $('#wpMeta').innerHTML = `<dl class="wp-dl">${rows.map(([k, v]) => `<div><dt class="label">${esc(t(k))}</dt><dd>${esc(v)}</dd></div>`).join('')}
+      ${w.link ? `<div><dt class="label">${esc(t('wp.link'))}</dt><dd><a class="wp-ext" href="${esc(w.link)}" target="_blank" rel="noopener">${esc((() => { try { return new URL(w.link).hostname.replace(/^www\./, ''); } catch (e) { return w.link; } })())} ↗</a></dd></div>` : ''}</dl>`;
 
     /* Program note: its own field if filled in, otherwise the description.
        When both exist, the description becomes the lead paragraph above the note. */
@@ -222,7 +231,7 @@
       work = idx >= 0 ? works[idx] : null;
     } catch (e) { console.error(e); failed = true; }
     renderText();
-    if (work) buildMedia(kindOf(work));
+    if (work) { buildMedia(kindOf(work)); heroBg(); }
     window.scrollTo(0, 0);
   }
   boot();

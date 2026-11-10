@@ -9,12 +9,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Sans:wght@400..600&family=Martian+Mono:wdth,wght@75..112.5,300..500&family=Noto+Sans+SC:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=Noto+Serif+SC:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=20261109a">
+<link rel="stylesheet" href="assets/style.css?v=20261109b">
 </head>
 <body class="wp-body">
 
-<header class="wp-top">
-  <div class="wrap">
+<header class="wp-hero" id="wpHero">
+  <div class="wp-hero-bg" id="wpHeroBg" aria-hidden="true"></div>
+  <div class="wrap wp-hero-in">
     <nav class="topbar" aria-label="Main">
       <a class="mark" href="./">M/TZ</a>
       <ul class="nav">
@@ -30,15 +31,14 @@
         </div>
       </div>
     </nav>
+    <a class="wp-back label" href="./#work" data-i18n="wp.back">← All work</a>
+    <div class="wp-head" id="wpHead"></div>
+    <div class="wp-meta" id="wpMeta"></div>
   </div>
 </header>
 
 <main class="wp" id="wp">
   <div class="wrap">
-    <a class="wp-back label" href="./#work" data-i18n="wp.back">← All work</a>
-
-    <div class="wp-head" id="wpHead"></div>
-
     <figure class="wp-media" id="wpMedia" hidden>
       <div class="win-bar">
         <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -48,10 +48,7 @@
       <div class="wp-stage" id="wpStage"></div>
     </figure>
 
-    <div class="wp-body-grid">
-      <aside class="wp-meta" id="wpMeta"></aside>
-      <article class="wp-text" id="wpText"></article>
-    </div>
+    <article class="wp-text" id="wpText"></article>
 
     <nav class="wp-pager" id="wpPager" aria-label="More work"></nav>
   </div>
@@ -64,6 +61,6 @@
   </div>
 </footer>
 
-<script src="assets/work.js?v=20261109a" defer></script>
+<script src="assets/work.js?v=20261109b" defer></script>
 </body>
 </html>
