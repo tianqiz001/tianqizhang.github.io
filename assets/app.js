@@ -15,7 +15,7 @@
     en: {
       'nav.work': 'Work', 'nav.about': 'About', 'nav.activity': 'Activity', 'nav.contact': 'Contact',
       'sound.off': 'Sound off', 'sound.on': 'Sound on',
-      'hero.hint': 'Turn sound on, then move across the name: left–right pans, up–down sets the filter, moving faster adds modulation. Press the pets to add layers.',
+      'hero.hint': 'Turn sound on, then move across the name: left–right pans, up–down sets the filter, moving faster adds modulation. Press a pet to switch the music.',
       'hero.scroll': 'Scroll for work ↓',
       'work.label': 'Selected work', 'work.note': 'Click a window to open the work.',
       'work.all': 'All', 'work.empty': 'Nothing in this category yet.',
@@ -34,7 +34,7 @@
     zh: {
       'nav.work': '作品', 'nav.about': '关于', 'nav.activity': '经历', 'nav.contact': '联系',
       'sound.off': '声音 关', 'sound.on': '声音 开',
-      'hero.hint': '打开声音，在名字上移动鼠标：左右控制声像，上下控制滤波频率，移动得越快调制越强。点一下小动物，可以叠加新的声部。',
+      'hero.hint': '打开声音，在名字上移动鼠标：左右控制声像，上下控制滤波频率，移动得越快调制越强。点一下小动物，就会换成它的音乐。',
       'hero.scroll': '向下查看作品 ↓',
       'work.label': '作品精选', 'work.note': '点击小窗进入作品页面。',
       'work.all': '全部', 'work.empty': '这个类别暂时还没有作品。',
@@ -193,12 +193,11 @@
     } catch (e) { routed = false; }
   }
 
-  /* ───────── Mercu's music layers ─────────
-     BGM1 loops underneath while sound is on. Over the name, the pointer plays it like an instrument:
-     x = pan, y = low-pass frequency (top = open), pointer speed = tremolo depth. Leaving the name
-     glides everything back to neutral. Each pet, when pressed, adds its own track (3 s fade-in);
-     the layers keep playing until the sound toggle is switched off. All of it runs through scBus,
-     which ducks to silence while a work is playing. */
+  /* ───────── Mercu's music ─────────
+     One track at a time. BGM1 plays when sound is turned on; pressing a pet crossfades to that
+     pet's track (3 s out, 3 s in). Whatever is playing goes through the name instrument:
+     x = pan, y = low-pass frequency (top = open), pointer speed = tremolo depth. Everything runs
+     through scBus, which ducks to silence while a work is playing. */
   const SOUND_V = '20261110';
   const TRACKS = {
     bgm: 'media/sound/bgm1.mp3',
@@ -207,54 +206,61 @@
     ubai: 'media/sound/ubai-bgm2.mp3',
     kylin: 'media/sound/kylin-dual-high.mp3',
   };
-  const BGM_LEVEL = 0.7, PET_LEVEL = 0.42, FADE_IN = 3;
-  const layers = {};   // name → { el, gain }
+  const LEVEL = 0.7, FADE = 3;
+  const layers = {};   // name → { el, gain, on }
+  let current = null;
   function layer(name) {
     if (layers[name] || !ensureCtx()) return layers[name];
     const el = new Audio(`${TRACKS[name]}?v=${SOUND_V}`);
     el.loop = true; el.preload = 'auto';
     const gain = actx.createGain(); gain.gain.value = 0;
     actx.createMediaElementSource(el).connect(gain);
-    layers[name] = { el, gain, on: false };
+    layers[name] = { el, gain, on: false, timer: 0 };
     return layers[name];
   }
-  function fadeTo(param, target, secs) {   // sine-shaped, like an Ndef fade; stays cancellable
+  function fadeTo(param, target, secs) {   // sine-shaped; stays cancellable
     const now = actx.currentTime, from = param.value;
     param.cancelScheduledValues(now); param.setValueAtTime(from, now);
     const N = 24;
     for (let i = 1; i <= N; i++) param.linearRampToValueAtTime(from + (target - from) * Math.sin((i / N) * Math.PI / 2), now + secs * i / N);
   }
-  function startLayer(name, level, dest) {
+  function fadeOut(L, secs) {
+    if (!L.on) return;
+    L.on = false;
+    fadeTo(L.gain.gain, 0, secs);
+    clearTimeout(L.timer);
+    L.timer = setTimeout(() => { if (!L.on) L.el.pause(); }, secs * 1000 + 150);
+  }
+  function playTrack(name) {
+    if (!soundOn || !TRACKS[name] || current === name || !ensureCtx()) return;
+    buildTheremin();
+    Object.entries(layers).forEach(([n, L]) => { if (n !== name) fadeOut(L, FADE); });
     const L = layer(name);
-    if (!L || L.on) return;
-    if (!L.wired) { L.gain.connect(dest); L.wired = true; }
+    if (!L.wired) { L.gain.connect(theremin.input); L.wired = true; }
+    clearTimeout(L.timer);
+    if (L.el.paused) L.el.currentTime = 0;   // a fresh start; if it was still fading out it just comes back
     L.on = true;
     const p = L.el.play(); if (p && p.catch) p.catch(() => {});
-    fadeTo(L.gain.gain, level, FADE_IN);
+    fadeTo(L.gain.gain, LEVEL, FADE);
+    current = name;
   }
-  function stopAllLayers() {
-    Object.values(layers).forEach((L) => {
-      if (!L.on) return;
-      L.on = false;
-      fadeTo(L.gain.gain, 0, 0.25);
-      setTimeout(() => { if (!L.on) L.el.pause(); }, 400);
-    });
+  function stopMusic() {
+    Object.values(layers).forEach((L) => fadeOut(L, 0.25));
+    current = null;
   }
 
   // BGM1 instrument chain: source → tremolo → low-pass → pan → scBus
   function buildTheremin() {
     if (theremin || !ensureCtx()) return;
-    const L = layer('bgm');
     const trem = actx.createGain();
     const lfo = actx.createOscillator(); lfo.frequency.value = 6.5;
     const lfoDepth = actx.createGain(); lfoDepth.gain.value = 0;
     lfo.connect(lfoDepth).connect(trem.gain); lfo.start();
     const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 20000; lp.Q.value = 0.9;
     const pan = actx.createStereoPanner ? actx.createStereoPanner() : null;
-    L.gain.connect(trem); trem.connect(lp);
+    trem.connect(lp);
     if (pan) lp.connect(pan).connect(scBus); else lp.connect(scBus);
-    L.wired = true;
-    theremin = { sc: true, trem, lfoDepth, lp, pan, freq: 20000, panV: 0, modV: 0, mod: 0 };
+    theremin = { sc: true, input: trem, trem, lfoDepth, lp, pan, freq: 20000, panV: 0, modV: 0, mod: 0 };
   }
   let modTimer = 0;
   function thereminUpdate(nx, ny, active, speed = 0) {
@@ -352,35 +358,21 @@
   hero.addEventListener('pointerleave', () => { ptr.active = false; if (soundOn) thereminUpdate(ptr.nx, ptr.ny, false); });
   hero.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') { ptr.active = false; thereminUpdate(ptr.nx, ptr.ny, false); } });
 
-  /* pets: pressing one adds its track to the stack */
-  let petBus = null;
-  function ensurePetBus() {
-    if (petBus || !ensureCtx()) return petBus;
-    petBus = actx.createGain(); petBus.gain.value = 1;
-    const safety = actx.createDynamicsCompressor();   // several mastered tracks at once sum hot
-    safety.threshold.value = -6; safety.knee.value = 4; safety.ratio.value = 12; safety.attack.value = 0.003; safety.release.value = 0.25;
-    petBus.connect(safety).connect(scBus);
-    return petBus;
-  }
-  function petPress(pet) {
-    if (!soundOn || !TRACKS[pet]) return;
-    startLayer(pet, PET_LEVEL, ensurePetBus());
-  }
+  /* pets: pressing one switches the music to its track */
   $$('.pet').forEach((el) => {
     const pet = (el.className.match(/pet-(ubai|kylin|bear|sunny)/) || [])[1];
-    el.addEventListener('click', () => petPress(pet));
-    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') petPress(pet); });
+    el.addEventListener('click', () => playTrack(pet));
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') playTrack(pet); });
   });
 
   $('#soundToggle').addEventListener('click', () => {
     soundOn = !soundOn;
     if (soundOn) {
       ensureCtx(); buildTheremin();
-      startLayer('bgm', BGM_LEVEL, scBus);
+      playTrack('bgm');
       thereminUpdate(ptr.nx, ptr.ny, ptr.active);
-      ['sunny', 'bear', 'ubai', 'kylin'].forEach((p) => layer(p));   // start buffering the pet tracks
     } else {
-      stopAllLayers();
+      stopMusic();
     }
     $('#soundToggle').setAttribute('aria-pressed', String(soundOn));
     $('#soundLabel').textContent = t(soundOn ? 'sound.on' : 'sound.off');
