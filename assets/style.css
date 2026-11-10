@@ -409,7 +409,7 @@ html[lang^="zh"] .label.sec-title {
 .win-dots i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid currentColor; opacity: .55; }
 .win.playing .win-dots i:first-child { background: var(--glow); border-color: var(--glow); opacity: 1; }
 .win-fig { flex: none; color: var(--teal); }
-.win-file { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: none; min-width: 0; }
+.win-file { display: none; } /* file names in window bars are hidden (user request) */
 
 .win-view {
   position: relative; display: block; width: 100%;
