@@ -24,6 +24,7 @@
       'photo.empty': 'Your photo goes here. Upload it in the editor under Profile & About → Photo.',
       'contact.label': 'Contact', 'contact.lead': 'For film and media scoring, commissions and collaborations.',
       'contact.copy': 'Copy email', 'contact.copied': 'Copied',
+      'form.title': 'Or leave a message', 'form.first': 'First name', 'form.last': 'Last name', 'form.email': 'Email', 'form.subject': 'Subject', 'form.message': 'Message', 'form.send': 'Send', 'form.sending': 'Sending…', 'form.ok': 'Thanks! Your message has been sent — I\'ll get back to you soon.', 'form.missing': 'Please fill in every field with a valid email.', 'form.fail': 'Couldn\'t send right now.', 'form.mail': 'Send it by email instead ↗',
       'foot.top': 'Back to top ↑', 'localTime': 'Local time',
       'type.audio': 'Listen', 'type.video': 'Watch', 'type.embed': 'Watch', 'type.none': 'Read',
       'player.play': 'Play', 'player.pause': 'Pause', 'player.close': 'Close player',
@@ -43,6 +44,7 @@
       'photo.empty': '这里放你的照片。在后台“简介与网站信息 → 照片”上传。',
       'contact.label': '联系', 'contact.lead': '影视与媒体配乐、委约创作及合作，欢迎来信。',
       'contact.copy': '复制邮箱', 'contact.copied': '已复制',
+      'form.title': '或者直接留言', 'form.first': '名', 'form.last': '姓', 'form.email': '邮箱', 'form.subject': '主题', 'form.message': '留言内容', 'form.send': '发送', 'form.sending': '发送中…', 'form.ok': '谢谢！留言已发送，我会尽快回复你。', 'form.missing': '请填写所有内容，并确认邮箱格式正确。', 'form.fail': '暂时发送失败。', 'form.mail': '改用邮件发送 ↗',
       'foot.top': '回到顶部 ↑', 'localTime': '当地时间',
       'type.audio': '试听', 'type.video': '观看', 'type.embed': '观看', 'type.none': '阅读',
       'player.play': '播放', 'player.pause': '暂停', 'player.close': '关闭播放器',
@@ -1228,6 +1230,41 @@
     catch (e) { const r = document.createRange(); r.selectNodeContents($('#email')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
     btn.textContent = t('contact.copied');
     setTimeout(() => { btn.textContent = t('contact.copy'); }, 1600);
+  });
+
+  // contact form: posts to formsubmit.co, which emails the message to site.email.
+  // if the service can't be reached (e.g. blocked network), offer a pre-filled mailto instead.
+  const cform = $('#cform');
+  if (cform) cform.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const st = $('#cfStatus'), btn = $('#cfSend');
+    const setStatus = (cls, html) => { st.className = `cf-status ${cls}`; st.innerHTML = html; };
+    cform.classList.add('tried');
+    if (!cform.checkValidity()) { setStatus('err', esc(t('form.missing'))); return; }
+    const d = Object.fromEntries(new FormData(cform));
+    if (d._honey) return;
+    const to = site.email || '';
+    const name = `${d.first_name} ${d.last_name}`.trim();
+    const mailto = `mailto:${to}?subject=${encodeURIComponent(d.subject_line)}&body=${encodeURIComponent(`${d.message}\n\n— ${name} <${d.email}>`)}`;
+    btn.disabled = true; btn.textContent = t('form.sending'); setStatus('', '');
+    try {
+      const r = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name, email: d.email, subject: d.subject_line, message: d.message,
+          _subject: `[Website] ${d.subject_line} — ${name}`, _template: 'table', _captcha: 'false', _replyto: d.email,
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || String(j.success) === 'false') throw new Error(j.message || r.status);
+      cform.reset(); cform.classList.remove('tried');
+      setStatus('ok', esc(t('form.ok')));
+    } catch (e) {
+      setStatus('err', `${esc(t('form.fail'))} <a href="${esc(mailto)}">${esc(t('form.mail'))}</a>`);
+    } finally {
+      btn.disabled = false; btn.textContent = t('form.send');
+    }
   });
 
   let clockFmt = null;

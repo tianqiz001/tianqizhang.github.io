@@ -663,6 +663,36 @@ html[lang^="zh"] .win-cap h3 { font-family: "Noto Sans SC", var(--display); font
   padding: 8px 14px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
 }
 .copy-btn:hover { border-color: var(--glow); color: var(--glow); }
+/* contact form — submissions are relayed to site.email by formsubmit.co */
+.cform { margin-top: clamp(40px, 5vw, 64px); max-width: 880px; display: grid; gap: 22px; }
+.cform-title { color: var(--paper) !important; }
+.cf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.cf { display: grid; gap: 8px; min-width: 0; }
+.cf .label { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.cf .label i { font-style: normal; color: var(--glow); }
+.cf input, .cf textarea {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; color: var(--paper);
+  background: rgba(5, 38, 40, .55); border: 1px solid var(--rule-dark); border-radius: 6px;
+  padding: 12px 14px; transition: border-color .2s, box-shadow .2s, background .2s;
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.cf textarea { resize: vertical; min-height: 150px; }
+.cf input:focus, .cf textarea:focus { outline: none; border-color: var(--glow); box-shadow: 0 0 0 3px rgba(65, 226, 200, .18); background: rgba(5, 38, 40, .8); }
+.cform.tried .cf :invalid { border-color: #e2846f; }
+.cf-honey { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.cf-foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.cf-send {
+  border: 1px solid var(--glow); background: var(--glow); color: var(--abyss); border-radius: 999px;
+  padding: 12px 26px; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+  cursor: pointer; transition: background .2s, color .2s, opacity .2s;
+}
+.cf-send:hover { background: transparent; color: var(--glow); }
+.cf-send:disabled { opacity: .5; cursor: progress; }
+.cf-status { margin: 0; font-size: 14px; color: var(--mist); }
+.cf-status.ok { color: var(--glow); }
+.cf-status.err { color: #e2846f; }
+.cf-status a { color: inherit; }
+@media (max-width: 600px) { .cf-two { grid-template-columns: 1fr; } }
 .links { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 24px; }
 .links a { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; text-decoration: none; color: var(--mist); }
 .links a:hover { color: var(--glow); }

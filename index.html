@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Sans:wght@400..600&family=Martian+Mono:wdth,wght@75..112.5,300..500&family=Noto+Sans+SC:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=Noto+Serif+SC:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=20261109b">
+<link rel="stylesheet" href="assets/style.css?v=20261110form">
 </head>
 <body>
 
@@ -171,6 +171,21 @@
       <a class="email" id="email" href="#"></a>
       <button type="button" class="copy-btn" id="copyEmail" data-i18n="contact.copy">Copy email</button>
     </div>
+    <form class="cform" id="cform" novalidate>
+      <p class="label cform-title" data-i18n="form.title">Or leave a message</p>
+      <div class="cf-row cf-two">
+        <label class="cf"><span class="label"><span data-i18n="form.first">First name</span> <i>*</i></span><input name="first_name" autocomplete="given-name" required></label>
+        <label class="cf"><span class="label"><span data-i18n="form.last">Last name</span> <i>*</i></span><input name="last_name" autocomplete="family-name" required></label>
+      </div>
+      <label class="cf"><span class="label"><span data-i18n="form.email">Email</span> <i>*</i></span><input type="email" name="email" autocomplete="email" required></label>
+      <label class="cf"><span class="label"><span data-i18n="form.subject">Subject</span> <i>*</i></span><input name="subject_line" required></label>
+      <label class="cf"><span class="label"><span data-i18n="form.message">Message</span> <i>*</i></span><textarea name="message" rows="6" required></textarea></label>
+      <input type="text" name="_honey" class="cf-honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="cf-foot">
+        <button type="submit" class="cf-send" id="cfSend" data-i18n="form.send">Send</button>
+        <p class="cf-status" id="cfStatus" role="status" aria-live="polite"></p>
+      </div>
+    </form>
     <ul class="links" id="footLinks"></ul>
     <div class="footer-name" aria-hidden="true">Mercu</div>
     <div class="foot-meta label">
@@ -218,6 +233,6 @@
   </div>
 </div>
 
-<script src="assets/app.js?v=20261110dry" defer></script>
+<script src="assets/app.js?v=20261110form" defer></script>
 </body>
 </html>
